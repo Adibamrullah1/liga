@@ -1,0 +1,58 @@
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
+import { resultSchema } from '@/lib/validations/match'
+
+export async function POST(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const session = await auth()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const body = await req.json()
+    const data = resultSchema.parse(body)
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Update match score and status
+      const match = await tx.match.update({
+        where: { id: params.id },
+        data: {
+          homeScore: data.homeScore,
+          awayScore: data.awayScore,
+          status: 'FINISHED',
+          playedAt: data.playedAt ? new Date(data.playedAt) : new Date(),
+        },
+      })
+
+      // Upsert player stats if provided
+      if (data.playerStats && data.playerStats.length > 0) {
+        // Delete existing stats for this match
+        await tx.playerStat.deleteMany({
+          where: { matchId: params.id },
+        })
+
+        // Create new stats
+        await tx.playerStat.createMany({
+          data: data.playerStats.map((stat) => ({
+            matchId: params.id,
+            playerId: stat.playerId,
+            goals: stat.goals,
+            assists: stat.assists,
+            rating: stat.rating,
+            yellowCard: stat.yellowCard,
+            redCard: stat.redCard,
+            minutesPlayed: stat.minutesPlayed,
+          })),
+        })
+      }
+
+      return match
+    })
+
+    return NextResponse.json(result)
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: error.errors }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Failed to save result' }, { status: 500 })
+  }
+}
