@@ -1,13 +1,14 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus, ClipboardCheck } from 'lucide-react'
 import { formatDateTime, getStatusBadgeColor, getStatusLabel } from '@/lib/utils'
+import DeleteButton from '@/components/admin/DeleteButton'
 
 export default async function AdminPertandinganPage() {
   const matches = await prisma.match.findMany({
-    include: { homeTeam: true, awayTeam: true, season: true },
+    include: { homePlayer: true, awayPlayer: true, season: true },
     orderBy: { scheduledAt: 'desc' },
   })
 
@@ -41,9 +42,9 @@ export default async function AdminPertandinganPage() {
               {matches.map((match) => (
                 <tr key={match.id} className="border-b border-border/30 table-row-hover transition-colors">
                   <td className="py-3 px-4">
-                    <span className="font-semibold text-foreground">{match.homeTeam.name}</span>
+                    <span className="font-semibold text-foreground">{match.homePlayer.name}</span>
                     <span className="text-muted-foreground mx-2">vs</span>
-                    <span className="font-semibold text-foreground">{match.awayTeam.name}</span>
+                    <span className="font-semibold text-foreground">{match.awayPlayer.name}</span>
                   </td>
                   <td className="text-center py-3 px-4">
                     {match.status === 'FINISHED' ? (
@@ -58,12 +59,21 @@ export default async function AdminPertandinganPage() {
                   <td className="text-center py-3 px-4 text-muted-foreground text-xs">{match.season.name}</td>
                   <td className="text-center py-3 px-4 text-muted-foreground text-xs">{formatDateTime(match.scheduledAt)}</td>
                   <td className="text-right py-3 px-4">
-                    {match.status === 'SCHEDULED' && (
-                      <Link href={`/admin/pertandingan/${match.id}/hasil`}
-                        className="px-3 py-1.5 rounded-lg bg-gaming-accent/10 text-gaming-accent text-xs font-semibold hover:bg-gaming-accent/20 transition-colors inline-flex items-center gap-1">
-                        <ClipboardCheck className="w-3.5 h-3.5" /> Input Hasil
-                      </Link>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {match.status === 'SCHEDULED' && (
+                        <>
+                          <Link href={`/admin/pertandingan/${match.id}/edit`}
+                            className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition-colors flex items-center justify-center">
+                            ✎
+                          </Link>
+                          <Link href={`/admin/pertandingan/${match.id}/hasil`}
+                            className="px-3 py-1.5 rounded-lg bg-gaming-accent/10 text-gaming-accent text-xs font-semibold hover:bg-gaming-accent/20 transition-colors inline-flex items-center gap-1">
+                            <ClipboardCheck className="w-3.5 h-3.5" /> Input Hasil
+                          </Link>
+                        </>
+                      )}
+                      <DeleteButton apiUrl={`/api/matches/${match.id}`} confirmMessage="Hapus pertandingan ini?" />
+                    </div>
                   </td>
                 </tr>
               ))}

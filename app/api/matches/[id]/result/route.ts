@@ -23,27 +23,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         },
       })
 
-      // Upsert player stats if provided
-      if (data.playerStats && data.playerStats.length > 0) {
-        // Delete existing stats for this match
-        await tx.playerStat.deleteMany({
-          where: { matchId: params.id },
-        })
 
-        // Create new stats
-        await tx.playerStat.createMany({
-          data: data.playerStats.map((stat) => ({
-            matchId: params.id,
-            playerId: stat.playerId,
-            goals: stat.goals,
-            assists: stat.assists,
-            rating: stat.rating,
-            yellowCard: stat.yellowCard,
-            redCard: stat.redCard,
-            minutesPlayed: stat.minutesPlayed,
-          })),
-        })
-      }
 
       return match
     })

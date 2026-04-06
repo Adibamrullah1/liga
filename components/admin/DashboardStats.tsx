@@ -3,23 +3,22 @@
 import { Users, UserCircle, Swords, Trophy } from 'lucide-react'
 
 interface DashboardStatsProps {
-  totalTeams: number
   totalPlayers: number
   totalMatches: number
   finishedMatches: number
 }
 
-export default function DashboardStats({ totalTeams, totalPlayers, totalMatches, finishedMatches }: DashboardStatsProps) {
+export default function DashboardStats({ totalPlayers, totalMatches, finishedMatches }: DashboardStatsProps) {
   const stats = [
     {
-      label: 'Total Tim',
-      value: totalTeams,
+      label: 'Sistem 1v1',
+      value: 'Aktif',
       icon: Users,
       color: 'from-neon/20 to-neon-blue/20 border-neon/30',
       iconColor: 'text-neon',
     },
     {
-      label: 'Total Pemain',
+      label: 'Total Player',
       value: totalPlayers,
       icon: UserCircle,
       color: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',

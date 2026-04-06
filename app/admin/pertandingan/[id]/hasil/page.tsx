@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
@@ -8,8 +8,8 @@ export default async function HasilPertandinganPage({ params }: { params: { id: 
   const match = await prisma.match.findUnique({
     where: { id: params.id },
     include: {
-      homeTeam: { include: { players: true } },
-      awayTeam: { include: { players: true } },
+      homePlayer: true,
+      awayPlayer: true,
       season: true,
     },
   })
@@ -21,7 +21,7 @@ export default async function HasilPertandinganPage({ params }: { params: { id: 
       <div>
         <h1 className="font-heading text-3xl font-bold text-foreground">Input Hasil Pertandingan</h1>
         <p className="text-muted-foreground">
-          {match.homeTeam.name} vs {match.awayTeam.name} · {match.season.name}
+          {match.homePlayer.name} vs {match.awayPlayer.name} · {match.season.name}
         </p>
       </div>
       <ResultForm match={match} />

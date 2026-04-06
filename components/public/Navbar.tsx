@@ -2,15 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Trophy, Calendar, Users, BarChart3, Gamepad2, Menu, X } from 'lucide-react'
+import { Trophy, Calendar, Users, BarChart3, Gamepad2, Menu, X, Medal } from 'lucide-react'
 import { useState } from 'react'
 
 const navLinks = [
   { href: '/', label: 'Beranda', icon: Gamepad2 },
   { href: '/klasemen', label: 'Klasemen', icon: Trophy },
   { href: '/jadwal', label: 'Jadwal', icon: Calendar },
-  { href: '/tim', label: 'Tim', icon: Users },
-  { href: '/statistik', label: 'Statistik', icon: BarChart3 },
+  { href: '/pemain', label: 'Player', icon: Users },
+  { href: '/juara', label: 'Juara Bulanan', icon: Medal },
 ]
 
 export default function Navbar() {

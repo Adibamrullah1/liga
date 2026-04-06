@@ -19,7 +19,6 @@ import { useState } from 'react'
 
 const menuItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { href: '/admin/tim', label: 'Tim', icon: Users },
   { href: '/admin/pemain', label: 'Pemain', icon: UserCircle },
   { href: '/admin/pertandingan', label: 'Pertandingan', icon: Swords },
   { href: '/admin/musim', label: 'Musim', icon: CalendarClock },

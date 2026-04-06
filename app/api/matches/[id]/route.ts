@@ -7,16 +7,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const match = await prisma.match.findUnique({
       where: { id: params.id },
       include: {
-        homeTeam: { include: { players: true } },
-        awayTeam: { include: { players: true } },
+        homePlayer: true,
+        awayPlayer: true,
         season: true,
-        playerStats: {
-          include: {
-            player: {
-              include: { team: { select: { name: true, shortName: true } } },
-            },
-          },
-        },
       },
     })
 
@@ -42,10 +35,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       data: {
         ...(body.scheduledAt && { scheduledAt: new Date(body.scheduledAt) }),
         ...(body.status && { status: body.status }),
-        ...(body.homeTeamId && { homeTeamId: body.homeTeamId }),
-        ...(body.awayTeamId && { awayTeamId: body.awayTeamId }),
+        ...(body.homePlayerId && { homePlayerId: body.homePlayerId }),
+        ...(body.awayPlayerId && { awayPlayerId: body.awayPlayerId }),
       },
-      include: { homeTeam: true, awayTeam: true },
+      include: { homePlayer: true, awayPlayer: true },
     })
     return NextResponse.json(match)
   } catch (error) {

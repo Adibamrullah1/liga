@@ -1,31 +1,31 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { prisma } from '@/lib/prisma'
 import StandingsTable from '@/components/public/StandingsTable'
 import { Trophy } from 'lucide-react'
 
 async function getStandings() {
-  const [matches, teams, seasons] = await Promise.all([
+  const [matches, players, seasons] = await Promise.all([
     prisma.match.findMany({
       where: { status: 'FINISHED' },
-      include: { homeTeam: true, awayTeam: true },
+      include: { homePlayer: true, awayPlayer: true },
     }),
-    prisma.team.findMany(),
+    prisma.player.findMany(),
     prisma.season.findMany({ orderBy: { startDate: 'desc' } }),
   ])
 
   const standingsMap = new Map<string, any>()
-  teams.forEach(team => {
-    standingsMap.set(team.id, {
-      teamId: team.id, teamName: team.name, shortName: team.shortName, logoUrl: team.logoUrl,
+  players.forEach(player => {
+    standingsMap.set(player.id, {
+      playerId: player.id, playerName: player.name, shortName: player.shortName, avatarUrl: player.avatarUrl,
       played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0,
     })
   })
 
   matches.forEach(match => {
     if (match.homeScore === null || match.awayScore === null) return
-    const home = standingsMap.get(match.homeTeamId)
-    const away = standingsMap.get(match.awayTeamId)
+    const home = standingsMap.get(match.homePlayerId)
+    const away = standingsMap.get(match.awayPlayerId)
     if (!home || !away) return
     home.played++; away.played++
     home.goalsFor += match.homeScore; home.goalsAgainst += match.awayScore

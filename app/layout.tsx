@@ -3,7 +3,7 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: "Liga eFootball Mobile",
-  description: "Platform liga eFootball Mobile terlengkap — klasemen, jadwal, statistik, dan data tim/pemain.",
+  description: "Platform liga eFootball Mobile terlengkap — klasemen, jadwal, juara bulanan, dan data tim/pemain.",
   keywords: ["efootball", "liga", "mobile", "esports", "gaming"],
 }
 

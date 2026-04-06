@@ -7,46 +7,27 @@ interface PlayerFormProps {
   initialData?: {
     id?: string
     name: string
+    shortName: string
     username: string
-    position: string
-    nationality: string | null
     avatarUrl: string | null
-    teamId: string | null
+    description: string | null
+    city: string | null
   }
   mode: 'create' | 'edit'
 }
-
-const positions = [
-  { value: 'GK', label: 'Goalkeeper (GK)' },
-  { value: 'CB', label: 'Center Back (CB)' },
-  { value: 'LB', label: 'Left Back (LB)' },
-  { value: 'RB', label: 'Right Back (RB)' },
-  { value: 'CDM', label: 'Defensive Mid (CDM)' },
-  { value: 'CM', label: 'Central Mid (CM)' },
-  { value: 'CAM', label: 'Attacking Mid (CAM)' },
-  { value: 'LW', label: 'Left Wing (LW)' },
-  { value: 'RW', label: 'Right Wing (RW)' },
-  { value: 'ST', label: 'Striker (ST)' },
-  { value: 'CF', label: 'Center Forward (CF)' },
-]
 
 export default function PlayerForm({ initialData, mode }: PlayerFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [teams, setTeams] = useState<any[]>([])
   const [form, setForm] = useState({
     name: initialData?.name || '',
+    shortName: initialData?.shortName || '',
     username: initialData?.username || '',
-    position: initialData?.position || 'ST',
-    nationality: initialData?.nationality || '',
     avatarUrl: initialData?.avatarUrl || '',
-    teamId: initialData?.teamId || '',
+    description: initialData?.description || '',
+    city: initialData?.city || '',
   })
-
-  useEffect(() => {
-    fetch('/api/teams').then(r => r.json()).then(setTeams).catch(() => {})
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,9 +43,9 @@ export default function PlayerForm({ initialData, mode }: PlayerFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          nationality: form.nationality || null,
           avatarUrl: form.avatarUrl || null,
-          teamId: form.teamId || null,
+          description: form.description || null,
+          city: form.city || null,
         }),
       })
 
@@ -90,46 +71,46 @@ export default function PlayerForm({ initialData, mode }: PlayerFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Nama Pemain *</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Nama Player *</label>
           <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-            placeholder="Nama lengkap" required />
+            placeholder="Tulis nama panggilan/identitas" required />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Singkatan (Max 5 huruf) *</label>
+          <input type="text" value={form.shortName} onChange={(e) => setForm({ ...form, shortName: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono uppercase"
+            placeholder="Misal: DIB" maxLength={5} required />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">Username Game *</label>
           <input type="text" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="Username eFootball / PSN ID" required />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Posisi *</label>
-          <select value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all">
-            {positions.map(p => (
-              <option key={p.value} value={p.value}>{p.label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Tim</label>
-          <select value={form.teamId} onChange={(e) => setForm({ ...form, teamId: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all">
-            <option value="">Tanpa Tim</option>
-            {teams.map((t: any) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          <label className="block text-sm font-medium text-foreground mb-2">Asal Kota</label>
+          <input type="text" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            placeholder="Contoh: Jakarta" />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Kebangsaan</label>
-        <input type="text" value={form.nationality} onChange={(e) => setForm({ ...form, nationality: e.target.value })}
+        <label className="block text-sm font-medium text-foreground mb-2">URL Avatar/Foto</label>
+        <input type="url" value={form.avatarUrl} onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
           className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          placeholder="Contoh: Indonesia" />
+          placeholder="https://..." />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">Bio / Deskripsi</label>
+        <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
+          className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          placeholder="Ceritakan sedikit gaya bermain atau profil player ini..." />
       </div>
 
       <div className="flex gap-3 pt-4">

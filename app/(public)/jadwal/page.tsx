@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { prisma } from '@/lib/prisma'
 import MatchCard from '@/components/public/MatchCard'
@@ -8,7 +8,7 @@ import Link from 'next/link'
 async function getMatches() {
   const [allMatches, seasons] = await Promise.all([
     prisma.match.findMany({
-      include: { homeTeam: true, awayTeam: true, season: true },
+      include: { homePlayer: true, awayPlayer: true, season: true },
       orderBy: { scheduledAt: 'desc' },
     }),
     prisma.season.findMany({ orderBy: { startDate: 'desc' } }),

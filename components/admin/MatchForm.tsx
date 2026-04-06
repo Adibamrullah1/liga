@@ -3,42 +3,51 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function MatchForm() {
+interface MatchFormProps {
+  initialData?: any
+}
+
+export default function MatchForm({ initialData }: MatchFormProps = {}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [teams, setTeams] = useState<any[]>([])
+  const [players, setPlayers] = useState<any[]>([])
   const [seasons, setSeasons] = useState<any[]>([])
   const [form, setForm] = useState({
-    seasonId: '',
-    homeTeamId: '',
-    awayTeamId: '',
-    scheduledAt: '',
+    seasonId: initialData?.seasonId || '',
+    homePlayerId: initialData?.homePlayerId || '',
+    awayPlayerId: initialData?.awayPlayerId || '',
+    scheduledAt: initialData?.scheduledAt ? new Date(initialData.scheduledAt).toISOString().slice(0, 16) : '',
   })
 
   useEffect(() => {
-    fetch('/api/teams').then(r => r.json()).then(setTeams).catch(() => {})
+    fetch('/api/players').then(r => r.json()).then(setPlayers).catch(() => {})
     fetch('/api/seasons').then(r => r.json()).then((data) => {
       setSeasons(data)
-      const active = data.find((s: any) => s.isActive)
-      if (active) setForm(f => ({ ...f, seasonId: active.id }))
+      if (!initialData?.seasonId) {
+        const active = data.find((s: any) => s.isActive)
+        if (active) setForm(f => ({ ...f, seasonId: active.id }))
+      }
     }).catch(() => {})
-  }, [])
+  }, [initialData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    if (form.homeTeamId === form.awayTeamId) {
-      setError('Tim home dan away tidak boleh sama')
+    if (form.homePlayerId === form.awayPlayerId) {
+      setError('Player home dan away tidak boleh sama')
       setLoading(false)
       return
     }
 
     try {
-      const res = await fetch('/api/matches', {
-        method: 'POST',
+      const url = initialData ? `/api/matches/${initialData.id}` : '/api/matches'
+      const method = initialData ? 'PUT' : 'POST'
+      
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
@@ -79,22 +88,22 @@ export default function MatchForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Tim Home *</label>
-          <select value={form.homeTeamId} onChange={(e) => setForm({ ...form, homeTeamId: e.target.value })}
+          <label className="block text-sm font-medium text-foreground mb-2">Player 1 (Home) *</label>
+          <select value={form.homePlayerId} onChange={(e) => setForm({ ...form, homePlayerId: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" required>
-            <option value="">Pilih Tim Home</option>
-            {teams.map((t: any) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
+            <option value="">Pilih Player Home</option>
+            {players.map((p: any) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Tim Away *</label>
-          <select value={form.awayTeamId} onChange={(e) => setForm({ ...form, awayTeamId: e.target.value })}
+          <label className="block text-sm font-medium text-foreground mb-2">Player 2 (Away) *</label>
+          <select value={form.awayPlayerId} onChange={(e) => setForm({ ...form, awayPlayerId: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" required>
-            <option value="">Pilih Tim Away</option>
-            {teams.filter((t: any) => t.id !== form.homeTeamId).map((t: any) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
+            <option value="">Pilih Player Away</option>
+            {players.filter((p: any) => p.id !== form.homePlayerId).map((p: any) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         </div>
@@ -110,7 +119,7 @@ export default function MatchForm() {
       <div className="flex gap-3 pt-4">
         <button type="submit" disabled={loading}
           className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-neon to-neon-blue text-gaming-dark font-semibold hover:shadow-lg hover:shadow-neon/30 transition-all duration-300 disabled:opacity-50">
-          {loading ? 'Menyimpan...' : 'Buat Pertandingan'}
+          {loading ? 'Menyimpan...' : (initialData ? 'Update Pertandingan' : 'Buat Pertandingan')}
         </button>
         <button type="button" onClick={() => router.back()}
           className="px-6 py-2.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground border border-border/50 transition-all">

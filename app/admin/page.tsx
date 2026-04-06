@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { prisma } from '@/lib/prisma'
 import DashboardStats from '@/components/admin/DashboardStats'
@@ -7,13 +7,12 @@ import { Calendar, ArrowRight } from 'lucide-react'
 import { formatDateTime, getStatusBadgeColor, getStatusLabel } from '@/lib/utils'
 
 export default async function AdminDashboard() {
-  const [totalTeams, totalPlayers, totalMatches, finishedMatches, recentMatches] = await Promise.all([
-    prisma.team.count(),
+  const [totalPlayers, totalMatches, finishedMatches, recentMatches] = await Promise.all([
     prisma.player.count(),
     prisma.match.count(),
     prisma.match.count({ where: { status: 'FINISHED' } }),
     prisma.match.findMany({
-      include: { homeTeam: true, awayTeam: true, season: true },
+      include: { homePlayer: true, awayPlayer: true, season: true },
       orderBy: { updatedAt: 'desc' },
       take: 10,
     }),
@@ -27,7 +26,6 @@ export default async function AdminDashboard() {
       </div>
 
       <DashboardStats
-        totalTeams={totalTeams}
         totalPlayers={totalPlayers}
         totalMatches={totalMatches}
         finishedMatches={finishedMatches}
@@ -56,9 +54,9 @@ export default async function AdminDashboard() {
                 {recentMatches.map((match) => (
                   <tr key={match.id} className="border-b border-border/30 table-row-hover transition-colors">
                     <td className="py-3 px-4">
-                      <span className="font-semibold text-foreground">{match.homeTeam.shortName}</span>
+                      <span className="font-semibold text-foreground">{match.homePlayer.shortName}</span>
                       <span className="text-muted-foreground mx-2">vs</span>
-                      <span className="font-semibold text-foreground">{match.awayTeam.shortName}</span>
+                      <span className="font-semibold text-foreground">{match.awayPlayer.shortName}</span>
                     </td>
                     <td className="text-center py-3 px-4">
                       {match.status === 'FINISHED' ? (

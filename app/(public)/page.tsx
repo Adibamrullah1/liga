@@ -1,48 +1,54 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Trophy, Calendar, ArrowRight, Gamepad2, Zap, Target } from 'lucide-react'
 import StandingsTable from '@/components/public/StandingsTable'
 import MatchCard from '@/components/public/MatchCard'
-import StatsBanner from '@/components/public/StatsBanner'
+import MonthlyChampions from '@/components/public/MonthlyChampions'
 
 async function getHomeData() {
-  const [recentMatches, upcomingMatches, teams, season] = await Promise.all([
+  const [recentMatches, upcomingMatches, players, season, pastSeasons] = await Promise.all([
     prisma.match.findMany({
       where: { status: 'FINISHED' },
-      include: { homeTeam: true, awayTeam: true },
+      include: { homePlayer: true, awayPlayer: true },
       orderBy: { playedAt: 'desc' },
       take: 4,
     }),
     prisma.match.findMany({
       where: { status: 'SCHEDULED' },
-      include: { homeTeam: true, awayTeam: true },
+      include: { homePlayer: true, awayPlayer: true },
       orderBy: { scheduledAt: 'asc' },
       take: 4,
     }),
-    prisma.team.findMany(),
+    prisma.player.findMany(),
     prisma.season.findFirst({ where: { isActive: true } }),
+    prisma.season.findMany({
+      where: { isActive: false },
+      include: { matches: { where: { status: 'FINISHED' } } },
+      orderBy: { endDate: 'desc' },
+      take: 3
+    })
   ])
 
-  // Compute standings
+  // Compute standings for active season
   const finishedMatches = await prisma.match.findMany({
-    where: { status: 'FINISHED' },
-    include: { homeTeam: true, awayTeam: true },
+    where: { status: 'FINISHED', seasonId: season?.id },
+    include: { homePlayer: true, awayPlayer: true },
   })
 
   const standingsMap = new Map<string, any>()
-  teams.forEach(team => {
-    standingsMap.set(team.id, {
-      teamId: team.id, teamName: team.name, shortName: team.shortName, logoUrl: team.logoUrl,
+  players.forEach(player => {
+    standingsMap.set(player.id, {
+      playerId: player.id, playerName: player.name, shortName: player.shortName, avatarUrl: player.avatarUrl,
       played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0,
     })
   })
 
   finishedMatches.forEach(match => {
     if (match.homeScore === null || match.awayScore === null) return
-    const home = standingsMap.get(match.homeTeamId)
-    const away = standingsMap.get(match.awayTeamId)
+    const home = standingsMap.get(match.homePlayerId)
+    const away = standingsMap.get(match.awayPlayerId)
     if (!home || !away) return
     home.played++; away.played++
     home.goalsFor += match.homeScore; home.goalsAgainst += match.awayScore
@@ -58,48 +64,30 @@ async function getHomeData() {
     .filter(s => s.played > 0)
     .sort((a, b) => b.points - a.points || b.goalDiff - a.goalDiff)
 
-  // Top stats
-  const topScorers = await prisma.playerStat.groupBy({
-    by: ['playerId'],
-    where: { goals: { gt: 0 } },
-    _sum: { goals: true, assists: true },
-    orderBy: { _sum: { goals: 'desc' } },
-    take: 1,
-  })
-
-  const topAssists = await prisma.playerStat.groupBy({
-    by: ['playerId'],
-    where: { assists: { gt: 0 } },
-    _sum: { assists: true },
-    orderBy: { _sum: { assists: 'desc' } },
-    take: 1,
-  })
-
-  const bestRatings = await prisma.playerStat.groupBy({
-    by: ['playerId'],
-    where: { rating: { not: null } },
-    _avg: { rating: true },
-    orderBy: { _avg: { rating: 'desc' } },
-    take: 1,
-  })
-
-  const enrichPlayer = async (stat: any) => {
-    if (!stat) return null
-    const player = await prisma.player.findUnique({
-      where: { id: stat.playerId },
-      include: { team: { select: { shortName: true, name: true } } },
+  // Calculate champions for past seasons
+  const champions = pastSeasons.map(s => {
+    const sMap = new Map<string, any>()
+    players.forEach(p => sMap.set(p.id, { points: 0, playerName: p.name, shortName: p.shortName }))
+    s.matches.forEach(m => {
+      if (m.homeScore === null || m.awayScore === null) return
+      const home = sMap.get(m.homePlayerId)
+      const away = sMap.get(m.awayPlayerId)
+      if (!home || !away) return
+      if (m.homeScore > m.awayScore) home.points += 3
+      else if (m.homeScore < m.awayScore) away.points += 3
+      else { home.points += 1; away.points += 1 }
     })
-    return { ...stat, player }
-  }
+    const sorted = Array.from(sMap.values()).sort((a, b) => b.points - a.points)
+    const winner = sorted[0]
+    return winner && winner.points > 0 ? { seasonName: s.name, ...winner } : null
+  }).filter(Boolean) as { seasonName: string; playerName: string; shortName: string; points: number }[]
 
   return {
     recentMatches,
     upcomingMatches,
     standings,
     season,
-    topScorer: topScorers[0] ? await enrichPlayer(topScorers[0]) : null,
-    topAssist: topAssists[0] ? await enrichPlayer(topAssists[0]) : null,
-    bestRating: bestRatings[0] ? await enrichPlayer(bestRatings[0]) : null,
+    champions
   }
 }
 
@@ -128,7 +116,7 @@ export default async function HomePage() {
               <span className="text-foreground">MOBILE</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-              Platform liga eFootball Mobile terlengkap. Ikuti klasemen, jadwal pertandingan, statistik pemain, dan data tim dari liga.
+              Platform liga eFootball Mobile terlengkap. Ikuti klasemen, jadwal pertandingan, dan statistik player dari liga.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Link
@@ -151,13 +139,8 @@ export default async function HomePage() {
       </section>
 
       <div className="container mx-auto px-4 py-12 space-y-12">
-        {/* Stats Banner */}
         <section>
-          <StatsBanner
-            topScorer={data.topScorer}
-            topAssist={data.topAssist}
-            bestRating={data.bestRating}
-          />
+          <MonthlyChampions champions={data.champions} />
         </section>
 
         {/* Recent Results */}
@@ -210,16 +193,16 @@ export default async function HomePage() {
                 <div key={match.id} className="game-card p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{match.homeTeam.shortName}</span>
+                      <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{match.homePlayer.shortName}</span>
                       <span className="text-xs text-muted-foreground">vs</span>
-                      <span className="text-xs font-bold text-gaming-accent bg-gaming-accent/10 px-2 py-0.5 rounded">{match.awayTeam.shortName}</span>
+                      <span className="text-xs font-bold text-gaming-accent bg-gaming-accent/10 px-2 py-0.5 rounded">{match.awayPlayer.shortName}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {new Date(match.scheduledAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {match.homeTeam.name} vs {match.awayTeam.name}
+                    {match.homePlayer.name} vs {match.awayPlayer.name}
                   </p>
                 </div>
               )) : (

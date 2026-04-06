@@ -8,18 +8,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const player = await prisma.player.findUnique({
       where: { id: params.id },
       include: {
-        team: true,
-        playerStats: {
-          include: {
-            match: {
-              include: {
-                homeTeam: { select: { name: true, shortName: true } },
-                awayTeam: { select: { name: true, shortName: true } },
-              },
-            },
-          },
-          orderBy: { match: { scheduledAt: 'desc' } },
-        },
+        homeMatches: { include: { awayPlayer: true }, orderBy: { scheduledAt: 'desc' }, take: 5 },
+        awayMatches: { include: { homePlayer: true }, orderBy: { scheduledAt: 'desc' }, take: 5 },
       },
     })
 
@@ -44,7 +34,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const player = await prisma.player.update({
       where: { id: params.id },
       data,
-      include: { team: true },
     })
     return NextResponse.json(player)
   } catch (error: any) {

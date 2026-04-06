@@ -54,9 +54,8 @@ export default function Footer() {
               {[
                 { href: '/klasemen', label: 'Klasemen' },
                 { href: '/jadwal', label: 'Jadwal' },
-                { href: '/tim', label: 'Tim' },
-                { href: '/pemain', label: 'Pemain' },
-                { href: '/statistik', label: 'Statistik' },
+                { href: '/pemain', label: 'Player' },
+                { href: '/juara', label: 'Juara Bulanan' },
               ].map(link => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm text-muted-foreground hover:text-neon transition-colors duration-200">

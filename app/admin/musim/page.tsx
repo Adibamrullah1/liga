@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CalendarClock, Plus, CheckCircle } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 
 export default function AdminMusimPage() {
   const [seasons, setSeasons] = useState<any[]>([])
@@ -9,6 +10,7 @@ export default function AdminMusimPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
+    id: '',
     name: '',
     startDate: '',
     endDate: '',
@@ -24,17 +26,38 @@ export default function AdminMusimPage() {
 
   useEffect(() => { fetchSeasons() }, [])
 
+  const handleEdit = (season: any) => {
+    setForm({
+      id: season.id,
+      name: season.name,
+      startDate: new Date(season.startDate).toISOString().split('T')[0],
+      endDate: new Date(season.endDate).toISOString().split('T')[0],
+      isActive: season.isActive,
+    })
+    setShowForm(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
-      await fetch('/api/seasons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
+      if (form.id) {
+        // Edit Mode
+        await fetch(`/api/seasons/${form.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+      } else {
+        // Create Mode
+        await fetch('/api/seasons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+      }
       setShowForm(false)
-      setForm({ name: '', startDate: '', endDate: '', isActive: false })
+      setForm({ id: '', name: '', startDate: '', endDate: '', isActive: false })
       fetchSeasons()
     } catch (err) {
       console.error(err)
@@ -50,7 +73,10 @@ export default function AdminMusimPage() {
           <h1 className="font-heading text-3xl font-bold text-foreground">Kelola Musim</h1>
           <p className="text-muted-foreground">{seasons.length} musim terdaftar</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)}
+        <button onClick={() => {
+            setForm({ id: '', name: '', startDate: '', endDate: '', isActive: false })
+            setShowForm(!showForm)
+          }}
           className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-neon to-neon-blue text-gaming-dark font-semibold hover:shadow-lg hover:shadow-neon/30 transition-all duration-300 flex items-center gap-2">
           <Plus className="w-4 h-4" /> Tambah Musim
         </button>
@@ -58,7 +84,7 @@ export default function AdminMusimPage() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="game-card p-6 space-y-4">
-          <h3 className="font-heading text-lg font-bold text-foreground">Musim Baru</h3>
+          <h3 className="font-heading text-lg font-bold text-foreground">{form.id ? 'Edit Musim' : 'Musim Baru'}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Nama Musim *</label>
@@ -116,6 +142,11 @@ export default function AdminMusimPage() {
                   <CheckCircle className="w-3.5 h-3.5" /> Aktif
                 </span>
               )}
+              <button onClick={() => handleEdit(season)}
+                className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition-colors flex items-center justify-center">
+                ✎
+              </button>
+              <DeleteButton apiUrl={`/api/seasons/${season.id}`} confirmMessage={`Hapus musim ${season.name}? Seluruh pertandingan dalam musim ini akan ikut terhapus.`} />
             </div>
           </div>
         ))}

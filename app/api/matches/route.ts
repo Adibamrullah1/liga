@@ -7,23 +7,22 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
     const seasonId = searchParams.get('seasonId')
-    const teamId = searchParams.get('teamId')
+    const playerId = searchParams.get('playerId')
     const limit = searchParams.get('limit')
 
     const where: any = {}
     if (status) where.status = status
     if (seasonId) where.seasonId = seasonId
-    if (teamId) {
-      where.OR = [{ homeTeamId: teamId }, { awayTeamId: teamId }]
+    if (playerId) {
+      where.OR = [{ homePlayerId: playerId }, { awayPlayerId: playerId }]
     }
 
     const matches = await prisma.match.findMany({
       where,
       include: {
-        homeTeam: true,
-        awayTeam: true,
+        homePlayer: true,
+        awayPlayer: true,
         season: true,
-        _count: { select: { playerStats: true } },
       },
       orderBy: { scheduledAt: 'desc' },
       ...(limit ? { take: parseInt(limit) } : {}),
@@ -41,19 +40,19 @@ export async function POST(req: Request) {
 
     const body = await req.json()
 
-    if (body.homeTeamId === body.awayTeamId) {
-      return NextResponse.json({ error: 'Tim home dan away tidak boleh sama' }, { status: 400 })
+    if (body.homePlayerId === body.awayPlayerId) {
+      return NextResponse.json({ error: 'Player home dan away tidak boleh sama' }, { status: 400 })
     }
 
     const match = await prisma.match.create({
       data: {
         seasonId: body.seasonId,
-        homeTeamId: body.homeTeamId,
-        awayTeamId: body.awayTeamId,
+        homePlayerId: body.homePlayerId,
+        awayPlayerId: body.awayPlayerId,
         scheduledAt: new Date(body.scheduledAt),
         status: 'SCHEDULED',
       },
-      include: { homeTeam: true, awayTeam: true, season: true },
+      include: { homePlayer: true, awayPlayer: true, season: true },
     })
     return NextResponse.json(match, { status: 201 })
   } catch (error) {

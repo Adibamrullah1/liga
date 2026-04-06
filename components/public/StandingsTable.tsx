@@ -1,10 +1,10 @@
 'use client'
 
 interface Standing {
-  teamId: string
-  teamName: string
+  playerId: string
+  playerName: string
   shortName: string
-  logoUrl: string | null
+  avatarUrl: string | null
   played: number
   won: number
   drawn: number
@@ -29,7 +29,7 @@ export default function StandingsTable({ standings, compact = false }: Standings
         <thead>
           <tr className="border-b border-border/50">
             <th className="text-left py-3 px-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider">#</th>
-            <th className="text-left py-3 px-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider">Tim</th>
+            <th className="text-left py-3 px-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider">Player</th>
             <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider">Main</th>
             {!compact && (
               <>
@@ -45,7 +45,7 @@ export default function StandingsTable({ standings, compact = false }: Standings
           </tr>
         </thead>
         <tbody>
-          {displayStandings.map((team, index) => {
+          {displayStandings.map((player, index) => {
             const position = index + 1
             let rowClass = 'table-row-hover transition-colors duration-150'
             let positionClass = ''
@@ -62,7 +62,7 @@ export default function StandingsTable({ standings, compact = false }: Standings
             }
 
             return (
-              <tr key={team.teamId} className={`${rowClass} border-b border-border/30`}>
+              <tr key={player.playerId} className={`${rowClass} border-b border-border/30`}>
                 <td className="py-3 px-3">
                   <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${positionClass || 'bg-secondary text-muted-foreground'}`}>
                     {position}
@@ -70,31 +70,33 @@ export default function StandingsTable({ standings, compact = false }: Standings
                 </td>
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center text-xs font-bold text-primary">
-                      {team.shortName}
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center text-xs font-bold text-primary overflow-hidden">
+                      {player.avatarUrl ? (
+                        <img src={player.avatarUrl} alt={player.playerName} className="w-full h-full object-cover" />
+                      ) : player.shortName}
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{team.teamName}</p>
+                      <p className="font-semibold text-foreground">{player.playerName}</p>
                     </div>
                   </div>
                 </td>
-                <td className="text-center py-3 px-2 text-muted-foreground">{team.played}</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">{player.played}</td>
                 {!compact && (
                   <>
-                    <td className="text-center py-3 px-2 text-green-400 font-medium">{team.won}</td>
-                    <td className="text-center py-3 px-2 text-muted-foreground">{team.drawn}</td>
-                    <td className="text-center py-3 px-2 text-red-400 font-medium">{team.lost}</td>
-                    <td className="text-center py-3 px-2 text-muted-foreground">{team.goalsFor}</td>
-                    <td className="text-center py-3 px-2 text-muted-foreground">{team.goalsAgainst}</td>
+                    <td className="text-center py-3 px-2 text-green-400 font-medium">{player.won}</td>
+                    <td className="text-center py-3 px-2 text-muted-foreground">{player.drawn}</td>
+                    <td className="text-center py-3 px-2 text-red-400 font-medium">{player.lost}</td>
+                    <td className="text-center py-3 px-2 text-muted-foreground">{player.goalsFor}</td>
+                    <td className="text-center py-3 px-2 text-muted-foreground">{player.goalsAgainst}</td>
                     <td className="text-center py-3 px-2">
-                      <span className={team.goalDiff > 0 ? 'text-green-400' : team.goalDiff < 0 ? 'text-red-400' : 'text-muted-foreground'}>
-                        {team.goalDiff > 0 ? '+' : ''}{team.goalDiff}
+                      <span className={player.goalDiff > 0 ? 'text-green-400' : player.goalDiff < 0 ? 'text-red-400' : 'text-muted-foreground'}>
+                        {player.goalDiff > 0 ? '+' : ''}{player.goalDiff}
                       </span>
                     </td>
                   </>
                 )}
                 <td className="text-center py-3 px-3">
-                  <span className="font-bold text-lg text-primary">{team.points}</span>
+                  <span className="font-bold text-lg text-primary">{player.points}</span>
                 </td>
               </tr>
             )

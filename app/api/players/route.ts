@@ -9,11 +9,6 @@ export async function GET(req: Request) {
     const teamId = searchParams.get('teamId')
 
     const players = await prisma.player.findMany({
-      where: teamId ? { teamId } : {},
-      include: {
-        team: { select: { name: true, shortName: true } },
-        _count: { select: { playerStats: true } },
-      },
       orderBy: { name: 'asc' },
     })
     return NextResponse.json(players)
@@ -32,7 +27,6 @@ export async function POST(req: Request) {
 
     const player = await prisma.player.create({
       data,
-      include: { team: true },
     })
     return NextResponse.json(player, { status: 201 })
   } catch (error: any) {

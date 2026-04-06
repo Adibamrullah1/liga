@@ -11,8 +11,8 @@ interface MatchCardProps {
     homeScore: number | null
     awayScore: number | null
     scheduledAt: string
-    homeTeam: { id: string; name: string; shortName: string }
-    awayTeam: { id: string; name: string; shortName: string }
+    homePlayer: { id: string; name: string; shortName: string; avatarUrl?: string | null }
+    awayPlayer: { id: string; name: string; shortName: string; avatarUrl?: string | null }
   }
 }
 
@@ -36,13 +36,15 @@ export default function MatchCard({ match }: MatchCardProps) {
 
       {/* Match Score */}
       <div className="flex items-center justify-between gap-4">
-        {/* Home Team */}
-        <Link href={`/tim/${match.homeTeam.id}`} className="flex-1 text-center group/team">
-          <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center text-sm font-bold text-primary mb-2 group-hover/team:neon-glow transition-all duration-300">
-            {match.homeTeam.shortName}
+        {/* Home Player */}
+        <Link href={`/pemain/${match.homePlayer.id}`} className="flex-1 text-center group/team">
+          <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center text-sm font-bold text-primary mb-2 group-hover/team:neon-glow transition-all duration-300 overflow-hidden">
+            {match.homePlayer.avatarUrl ? (
+              <img src={match.homePlayer.avatarUrl} alt={match.homePlayer.name} className="w-full h-full object-cover" />
+            ) : match.homePlayer.shortName}
           </div>
           <p className="text-sm font-semibold text-foreground group-hover/team:text-primary transition-colors truncate">
-            {match.homeTeam.name}
+            {match.homePlayer.name}
           </p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Home</p>
         </Link>
@@ -60,13 +62,15 @@ export default function MatchCard({ match }: MatchCardProps) {
           )}
         </div>
 
-        {/* Away Team */}
-        <Link href={`/tim/${match.awayTeam.id}`} className="flex-1 text-center group/team">
-          <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-br from-gaming-accent/20 to-secondary flex items-center justify-center text-sm font-bold text-gaming-accent mb-2 group-hover/team:shadow-lg group-hover/team:shadow-gaming-accent/20 transition-all duration-300">
-            {match.awayTeam.shortName}
+        {/* Away Player */}
+        <Link href={`/pemain/${match.awayPlayer.id}`} className="flex-1 text-center group/team">
+          <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-br from-gaming-accent/20 to-secondary flex items-center justify-center text-sm font-bold text-gaming-accent mb-2 group-hover/team:shadow-lg group-hover/team:shadow-gaming-accent/20 transition-all duration-300 overflow-hidden">
+            {match.awayPlayer.avatarUrl ? (
+              <img src={match.awayPlayer.avatarUrl} alt={match.awayPlayer.name} className="w-full h-full object-cover" />
+            ) : match.awayPlayer.shortName}
           </div>
           <p className="text-sm font-semibold text-foreground group-hover/team:text-gaming-accent transition-colors truncate">
-            {match.awayTeam.name}
+            {match.awayPlayer.name}
           </p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Away</p>
         </Link>

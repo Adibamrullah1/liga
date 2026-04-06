@@ -12,18 +12,18 @@ export async function GET(req: Request) {
         ...(seasonId ? { seasonId } : {}),
       },
       include: {
-        homeTeam: true,
-        awayTeam: true,
+        homePlayer: true,
+        awayPlayer: true,
       },
     })
 
-    const teams = await prisma.team.findMany()
+    const players = await prisma.player.findMany()
 
     const standingsMap = new Map<string, {
-      teamId: string
-      teamName: string
+      playerId: string
+      playerName: string
       shortName: string
-      logoUrl: string | null
+      avatarUrl: string | null
       played: number
       won: number
       drawn: number
@@ -34,12 +34,12 @@ export async function GET(req: Request) {
       points: number
     }>()
 
-    teams.forEach(team => {
-      standingsMap.set(team.id, {
-        teamId: team.id,
-        teamName: team.name,
-        shortName: team.shortName,
-        logoUrl: team.logoUrl,
+    players.forEach(player => {
+      standingsMap.set(player.id, {
+        playerId: player.id,
+        playerName: player.name,
+        shortName: player.shortName,
+        avatarUrl: player.avatarUrl,
         played: 0, won: 0, drawn: 0, lost: 0,
         goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0,
       })
@@ -48,8 +48,8 @@ export async function GET(req: Request) {
     matches.forEach(match => {
       if (match.homeScore === null || match.awayScore === null) return
 
-      const home = standingsMap.get(match.homeTeamId)
-      const away = standingsMap.get(match.awayTeamId)
+      const home = standingsMap.get(match.homePlayerId)
+      const away = standingsMap.get(match.awayPlayerId)
 
       if (!home || !away) return
 
