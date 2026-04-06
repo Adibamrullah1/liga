@@ -3,7 +3,7 @@ export const revalidate = 0
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus, ClipboardCheck, Pencil } from 'lucide-react'
-import { formatDateTime, getStatusBadgeColor, getStatusLabel } from '@/lib/utils'
+import { formatShortDate, formatTime, getStatusBadgeColor, getStatusLabel } from '@/lib/utils'
 import DeleteButton from '@/components/admin/DeleteButton'
 
 export default async function AdminPertandinganPage() {
@@ -71,7 +71,10 @@ export default async function AdminPertandinganPage() {
                     </span>
                   </td>
                   <td className="text-center py-3 px-3 text-muted-foreground text-xs hidden md:table-cell">{match.season.name}</td>
-                  <td className="text-center py-3 px-3 text-muted-foreground text-xs hidden sm:table-cell whitespace-nowrap">{formatDateTime(match.scheduledAt)}</td>
+                  <td className="text-center py-3 px-3 text-muted-foreground text-xs hidden sm:table-cell">
+                    <div>{formatShortDate(match.scheduledAt)}</div>
+                    <div className="font-semibold text-primary">{formatTime(match.scheduledAt)} WIB</div>
+                  </td>
                   <td className="text-right py-3 px-4">
                     <div className="flex items-center justify-end gap-1.5">
                       {match.status === 'SCHEDULED' && (
