@@ -5,8 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+const WIB = 'Asia/Jakarta'
+
 export function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString('id-ID', {
+    timeZone: WIB,
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -14,19 +17,40 @@ export function formatDate(date: Date | string): string {
 }
 
 export function formatDateTime(date: Date | string): string {
-  return new Date(date).toLocaleDateString('id-ID', {
+  return new Date(date).toLocaleString('id-ID', {
+    timeZone: WIB,
     day: 'numeric',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
+  })
+}
+
+export function formatTime(date: Date | string): string {
+  return new Date(date).toLocaleTimeString('id-ID', {
+    timeZone: WIB,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   })
 }
 
 export function formatShortDate(date: Date | string): string {
   return new Date(date).toLocaleDateString('id-ID', {
+    timeZone: WIB,
     day: 'numeric',
     month: 'short',
+  })
+}
+
+export function formatDayDate(date: Date | string): string {
+  return new Date(date).toLocaleDateString('id-ID', {
+    timeZone: WIB,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   })
 }
 

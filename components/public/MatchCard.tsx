@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { Calendar } from 'lucide-react'
-import { formatDateTime, getStatusBadgeColor, getStatusLabel } from '@/lib/utils'
+import { Calendar, Clock } from 'lucide-react'
+import { formatShortDate, formatTime, getStatusBadgeColor, getStatusLabel } from '@/lib/utils'
 
 interface MatchCardProps {
   match: {
@@ -26,10 +26,16 @@ export default function MatchCard({ match }: MatchCardProps) {
           {isLive && <span className="w-1.5 h-1.5 rounded-full bg-red-400 mr-1 animate-pulse" />}
           {getStatusLabel(match.status)}
         </span>
-        <span className="text-xs text-muted-foreground flex items-center gap-1">
-          <Calendar className="w-3 h-3" />
-          {formatDateTime(match.scheduledAt)}
-        </span>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {formatShortDate(match.scheduledAt)}
+          </span>
+          <span className="text-xs font-semibold text-primary flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {formatTime(match.scheduledAt)} WIB
+          </span>
+        </div>
       </div>
 
       {/* Match */}
