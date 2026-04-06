@@ -11,23 +11,31 @@ async function getHomeData() {
   const [recentMatches, upcomingMatches, players, season, pastSeasons] = await Promise.all([
     prisma.match.findMany({
       where: { status: 'FINISHED' },
-      include: { homePlayer: true, awayPlayer: true },
+      select: { id: true, homeScore: true, awayScore: true, status: true, scheduledAt: true, playedAt: true,
+        homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+        awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+      },
       orderBy: { playedAt: 'desc' },
       take: 4,
     }),
     prisma.match.findMany({
       where: { status: 'SCHEDULED' },
-      include: { homePlayer: true, awayPlayer: true },
+      select: { id: true, status: true, scheduledAt: true,
+        homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+        awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+      },
       orderBy: { scheduledAt: 'asc' },
       take: 4,
     }),
-    prisma.player.findMany(),
-    prisma.season.findFirst({ where: { isActive: true } }),
+    prisma.player.findMany({ select: { id: true, name: true, shortName: true, avatarUrl: true } }),
+    prisma.season.findFirst({ where: { isActive: true }, select: { id: true, name: true } }),
     prisma.season.findMany({
       where: { isActive: false },
-      include: { matches: { where: { status: 'FINISHED' } } },
+      select: { id: true, name: true, endDate: true,
+        matches: { where: { status: 'FINISHED' }, select: { homePlayerId: true, awayPlayerId: true, homeScore: true, awayScore: true } }
+      },
       orderBy: { endDate: 'desc' },
-      take: 3
+      take: 3,
     })
   ])
 
@@ -138,7 +146,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-12 space-y-12">
+      <div className="container mx-auto px-4 py-8 md:py-12 space-y-10 md:space-y-12">
         <section>
           <MonthlyChampions champions={data.champions} />
         </section>
