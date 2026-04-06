@@ -33,7 +33,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     const player = await prisma.player.update({
       where: { id: params.id },
-      data,
+      data: {
+        name: data.name,
+        ...(data.shortName && { shortName: data.shortName }),
+        ...(data.username && { username: data.username }),
+        avatarUrl: data.avatarUrl ?? null,
+        description: data.description ?? null,
+        city: data.city ?? null,
+      },
     })
     return NextResponse.json(player)
   } catch (error: any) {
