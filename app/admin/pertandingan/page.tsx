@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Plus, ClipboardCheck, Pencil } from 'lucide-react'
 import { formatShortDate, formatTime, getStatusBadgeColor, getStatusLabel } from '@/lib/utils'
 import DeleteButton from '@/components/admin/DeleteButton'
+import RescheduleButton from '@/components/admin/RescheduleButton'
 
 export default async function AdminPertandinganPage() {
   const matches = await prisma.match.findMany({
@@ -79,6 +80,11 @@ export default async function AdminPertandinganPage() {
                     <div className="flex items-center justify-end gap-1.5">
                       {match.status === 'SCHEDULED' && (
                         <>
+                          <RescheduleButton
+                            matchId={match.id}
+                            currentSchedule={match.scheduledAt}
+                            matchLabel={`${match.homePlayer.name} vs ${match.awayPlayer.name}`}
+                          />
                           <Link href={`/admin/pertandingan/${match.id}/edit`}
                             className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors flex items-center justify-center"
                             title="Edit">
