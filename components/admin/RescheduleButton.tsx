@@ -7,20 +7,16 @@ import { useRouter } from 'next/navigation'
 interface RescheduleButtonProps {
   matchId: string
   currentSchedule: string | Date
-  matchLabel: string // "Wildan vs Iqbal"
+  matchLabel: string
 }
 
-// Konversi UTC ke format datetime-local WIB (UTC+7)
 function toWIBDatetimeLocal(date: string | Date): string {
   const d = new Date(date)
-  // Tambahkan offset WIB +7 jam
   const wib = new Date(d.getTime() + 7 * 60 * 60 * 1000)
   return wib.toISOString().slice(0, 16)
 }
 
-// Konversi datetime-local input (WIB) ke ISO UTC string
 function wibInputToISO(datetimeLocal: string): string {
-  // datetimeLocal adalah waktu WIB, kurangi 7 jam untuk dapat UTC
   const d = new Date(datetimeLocal)
   const utc = new Date(d.getTime() - 7 * 60 * 60 * 1000)
   return utc.toISOString()
@@ -34,7 +30,15 @@ export default function RescheduleButton({ matchId, currentSchedule, matchLabel 
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
+  const handleOpen = () => {
+    setValue(toWIBDatetimeLocal(currentSchedule))
+    setError('')
+    setSuccess(false)
+    setOpen(true)
+  }
+
   const handleSave = async () => {
+    if (!value) return
     setLoading(true)
     setError('')
     try {
@@ -62,84 +66,128 @@ export default function RescheduleButton({ matchId, currentSchedule, matchLabel 
 
   return (
     <>
-      {/* Tombol Reschedule */}
+      {/* Tombol kuning di tabel */}
       <button
-        onClick={() => { setOpen(true); setValue(toWIBDatetimeLocal(currentSchedule)) }}
-        className="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-colors flex items-center justify-center"
+        onClick={handleOpen}
         title="Reschedule"
+        style={{ background: 'rgba(234,179,8,0.15)', color: '#facc15' }}
+        className="w-8 h-8 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity"
       >
         <CalendarClock className="w-3.5 h-3.5" />
       </button>
 
-      {/* Modal Overlay */}
+      {/* Modal */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+        >
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setOpen(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
           />
 
-          {/* Dialog */}
-          <div className="relative z-10 w-full max-w-sm bg-gaming-surface border border-border/50 rounded-2xl shadow-2xl p-6 space-y-4">
+          {/* Dialog box */}
+          <div style={{
+            position: 'relative',
+            zIndex: 10,
+            width: '100%',
+            maxWidth: '400px',
+            background: '#111827',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+          }}>
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div>
-                <h3 className="font-heading text-lg font-bold text-foreground flex items-center gap-2">
-                  <CalendarClock className="w-5 h-5 text-yellow-400" />
-                  Reschedule
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{matchLabel}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <CalendarClock style={{ width: '18px', height: '18px', color: '#facc15' }} />
+                  <span style={{ fontWeight: 700, fontSize: '16px', color: '#f9fafb' }}>Reschedule Pertandingan</span>
+                </div>
+                <p style={{ fontSize: '12px', color: '#9ca3af' }}>{matchLabel}</p>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 flex items-center justify-center transition-colors"
+                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <X className="w-4 h-4" />
+                <X style={{ width: '16px', height: '16px' }} />
               </button>
             </div>
 
             {/* Input */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Jadwal Baru <span className="text-muted-foreground font-normal">(WIB)</span>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d1d5db', marginBottom: '8px' }}>
+                Jadwal Baru <span style={{ color: '#9ca3af', fontWeight: 400 }}>(WIB)</span>
               </label>
               <input
                 type="datetime-local"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-secondary border border-border/50 text-foreground focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all"
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  background: '#1f2937',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#f9fafb',
+                  fontSize: '14px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  colorScheme: 'dark',
+                }}
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', color: '#f87171', fontSize: '13px' }}>
                 {error}
-              </p>
+              </div>
             )}
 
             {/* Buttons */}
-            <div className="flex gap-3 pt-1">
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 onClick={handleSave}
                 disabled={loading || success || !value}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 
-                  ${success
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30 disabled:opacity-50'
-                  }`}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  cursor: loading || success ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  background: success ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)',
+                  color: success ? '#4ade80' : '#facc15',
+                  opacity: loading || !value ? 0.6 : 1,
+                }}
               >
                 {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
                 ) : success ? (
-                  <><Check className="w-4 h-4" /> Tersimpan!</>
+                  <><Check style={{ width: '16px', height: '16px' }} /> Tersimpan!</>
                 ) : (
-                  <><CalendarClock className="w-4 h-4" /> Simpan Jadwal</>
+                  <><CalendarClock style={{ width: '16px', height: '16px' }} /> Simpan Jadwal</>
                 )}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="px-4 py-2.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground border border-border/50 transition-all text-sm"
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#9ca3af',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
               >
                 Batal
               </button>
