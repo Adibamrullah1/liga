@@ -10,6 +10,7 @@ const WIB = 'Asia/Jakarta'
 export function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString('id-ID', {
     timeZone: WIB,
+    weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -19,6 +20,7 @@ export function formatDate(date: Date | string): string {
 export function formatDateTime(date: Date | string): string {
   return new Date(date).toLocaleString('id-ID', {
     timeZone: WIB,
+    weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -40,8 +42,10 @@ export function formatTime(date: Date | string): string {
 export function formatShortDate(date: Date | string): string {
   return new Date(date).toLocaleDateString('id-ID', {
     timeZone: WIB,
+    weekday: 'short',
     day: 'numeric',
     month: 'short',
+    year: 'numeric',
   })
 }
 
@@ -51,6 +55,7 @@ export function formatDayDate(date: Date | string): string {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    year: 'numeric',
   })
 }
 
