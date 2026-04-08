@@ -98,7 +98,7 @@ export default async function KlasemenPage({ searchParams }: { searchParams: { s
 
         {/* Season Selector Dropdown */}
         <div className="mt-2 md:mt-0">
-          <SeasonSelector seasons={seasons} currentSeasonId={activeSeasonId} />
+          <SeasonSelector seasons={seasons} currentSeasonId={activeSeasonId || undefined} />
         </div>
       </div>
 
