@@ -1,82 +1,84 @@
-export const revalidate = 0
-
 import { prisma } from '@/lib/prisma'
 import StandingsTable from '@/components/public/StandingsTable'
 import { Trophy } from 'lucide-react'
 import type { Metadata } from 'next'
 import SeasonSelector from '@/components/public/SeasonSelector'
+import { unstable_cache } from 'next/cache'
 
 export const metadata: Metadata = {
   title: 'Klasemen',
   description: 'Lihat klasemen liga eFootball Mobile terkini.',
 }
 
-async function getStandings(seasonIdParam?: string) {
-  const seasons = await prisma.season.findMany({
-    orderBy: { startDate: 'desc' }
-  })
-
-  // Jika parameter dikirim, pakai itu. Kalau tidak, default ke yang Aktif, atau fallback terbawah
-  let targetSeason = undefined
-  if (seasonIdParam) {
-    targetSeason = seasons.find(s => s.id === seasonIdParam)
-  }
-  if (!targetSeason) {
-    targetSeason = seasons.find(s => s.isActive) || seasons[0]
-  }
-
-  if (!targetSeason) {
-    return { standings: [], seasonName: '', seasons: [], activeSeasonId: null }
-  }
-
-  const [matches, players] = await Promise.all([
-    prisma.match.findMany({
-      where: { status: 'FINISHED', seasonId: targetSeason.id },
-      select: {
-        homePlayerId: true, awayPlayerId: true,
-        homeScore: true, awayScore: true,
-      },
-    }),
-    prisma.player.findMany({
-      select: { id: true, name: true, shortName: true, avatarUrl: true },
-    }),
-  ])
-
-  const standingsMap = new Map<string, any>()
-  players.forEach(player => {
-    standingsMap.set(player.id, {
-      playerId: player.id, playerName: player.name, shortName: player.shortName, avatarUrl: player.avatarUrl,
-      played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0,
+const getStandings = unstable_cache(
+  async (seasonIdParam?: string) => {
+    const seasons = await prisma.season.findMany({
+      orderBy: { startDate: 'desc' }
     })
-  })
 
-  matches.forEach(match => {
-    if (match.homeScore === null || match.awayScore === null) return
-    const home = standingsMap.get(match.homePlayerId)
-    const away = standingsMap.get(match.awayPlayerId)
-    if (!home || !away) return
-    home.played++; away.played++
-    home.goalsFor += match.homeScore; home.goalsAgainst += match.awayScore
-    away.goalsFor += match.awayScore; away.goalsAgainst += match.homeScore
-    if (match.homeScore > match.awayScore) { home.won++; home.points += 3; away.lost++ }
-    else if (match.homeScore < match.awayScore) { away.won++; away.points += 3; home.lost++ }
-    else { home.drawn++; away.drawn++; home.points += 1; away.points += 1 }
-  })
+    let targetSeason = undefined
+    if (seasonIdParam) {
+      targetSeason = seasons.find(s => s.id === seasonIdParam)
+    }
+    if (!targetSeason) {
+      targetSeason = seasons.find(s => s.isActive) || seasons[0]
+    }
 
-  const standings = Array.from(standingsMap.values()).map(s => {
-    s.goalDiff = s.goalsFor - s.goalsAgainst
-    return s
-  }).filter(s => s.played > 0)
+    if (!targetSeason) {
+      return { standings: [], seasonName: '', seasons: [], activeSeasonId: null }
+    }
 
-  standings.sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points
-    if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff
-    if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor
-    return a.playerName.localeCompare(b.playerName)
-  })
+    const [matches, players] = await Promise.all([
+      prisma.match.findMany({
+        where: { status: 'FINISHED', seasonId: targetSeason.id },
+        select: {
+          homePlayerId: true, awayPlayerId: true,
+          homeScore: true, awayScore: true,
+        },
+      }),
+      prisma.player.findMany({
+        select: { id: true, name: true, shortName: true, avatarUrl: true },
+      }),
+    ])
 
-  return { standings, seasonName: targetSeason.name, seasons, activeSeasonId: targetSeason.id }
-}
+    const standingsMap = new Map<string, any>()
+    players.forEach(player => {
+      standingsMap.set(player.id, {
+        playerId: player.id, playerName: player.name, shortName: player.shortName, avatarUrl: player.avatarUrl,
+        played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0,
+      })
+    })
+
+    matches.forEach(match => {
+      if (match.homeScore === null || match.awayScore === null) return
+      const home = standingsMap.get(match.homePlayerId)
+      const away = standingsMap.get(match.awayPlayerId)
+      if (!home || !away) return
+      home.played++; away.played++
+      home.goalsFor += match.homeScore; home.goalsAgainst += match.awayScore
+      away.goalsFor += match.awayScore; away.goalsAgainst += match.homeScore
+      if (match.homeScore > match.awayScore) { home.won++; home.points += 3; away.lost++ }
+      else if (match.homeScore < match.awayScore) { away.won++; away.points += 3; home.lost++ }
+      else { home.drawn++; away.drawn++; home.points += 1; away.points += 1 }
+    })
+
+    const standings = Array.from(standingsMap.values()).map(s => {
+      s.goalDiff = s.goalsFor - s.goalsAgainst
+      return s
+    }).filter(s => s.played > 0)
+
+    standings.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points
+      if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff
+      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor
+      return a.playerName.localeCompare(b.playerName)
+    })
+
+    return { standings, seasonName: targetSeason.name, seasons, activeSeasonId: targetSeason.id }
+  },
+  ['public-klasemen'],
+  { revalidate: 60, tags: ['matches', 'seasons', 'players'] }
+)
 
 export default async function KlasemenPage({ searchParams }: { searchParams: { season?: string } }) {
   const { standings, seasonName, seasons, activeSeasonId } = await getStandings(searchParams.season)
