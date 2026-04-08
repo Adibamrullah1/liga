@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Trophy, Calendar, Users, BarChart3, Gamepad2, Menu, X, Medal } from 'lucide-react'
+import { Trophy, Calendar, Users, BarChart3, Gamepad2, Menu, X, Medal, History } from 'lucide-react'
 import { useState } from 'react'
 
 const navLinks = [
   { href: '/', label: 'Beranda', icon: Gamepad2 },
   { href: '/klasemen', label: 'Klasemen', icon: Trophy },
   { href: '/jadwal', label: 'Jadwal', icon: Calendar },
+  { href: '/riwayat', label: 'Riwayat', icon: History },
   { href: '/pemain', label: 'Player', icon: Users },
   { href: '/juara', label: 'Juara Bulanan', icon: Medal },
 ]

@@ -23,36 +23,21 @@ async function getMatches(seasonIdParam?: string) {
     targetSeason = seasons.find(s => s.isActive) || seasons[0]
   }
 
-  if (!targetSeason) {
-    return { scheduled: [], finished: [], seasons: [], activeSeasonId: null }
-  }
-
-  const [scheduled, finished] = await Promise.all([
-    prisma.match.findMany({
-      where: { status: { in: ['SCHEDULED', 'LIVE'] }, seasonId: targetSeason.id },
-      select: {
-        id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
-        homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
-        awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
-      },
-      orderBy: { scheduledAt: 'asc' },
-    }),
-    prisma.match.findMany({
-      where: { status: 'FINISHED', seasonId: targetSeason.id },
-      select: {
-        id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
-        homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
-        awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
-      },
-      orderBy: { scheduledAt: 'desc' },
-    }),
-  ])
+  const scheduled = await prisma.match.findMany({
+    where: { status: { in: ['SCHEDULED', 'LIVE'] }, seasonId: targetSeason.id },
+    select: {
+      id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
+      homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+      awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+    },
+    orderBy: { scheduledAt: 'asc' },
+  })
   
-  return { scheduled, finished, seasons, activeSeasonId: targetSeason.id }
+  return { scheduled, seasons, activeSeasonId: targetSeason.id }
 }
 
 export default async function JadwalPage({ searchParams }: { searchParams: { season?: string } }) {
-  const { scheduled, finished, seasons, activeSeasonId } = await getMatches(searchParams.season)
+  const { scheduled, seasons, activeSeasonId } = await getMatches(searchParams.season)
   
-  return <ScheduleClient scheduled={scheduled} finished={finished} seasons={seasons} currentSeasonId={activeSeasonId} />
+  return <ScheduleClient scheduled={scheduled} seasons={seasons} currentSeasonId={activeSeasonId} />
 }

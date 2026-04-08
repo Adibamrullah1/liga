@@ -25,12 +25,11 @@ interface Match {
 
 interface ScheduleClientProps {
   scheduled: Match[]
-  finished: Match[]
   seasons: {id: string, name: string, isActive: boolean}[]
   currentSeasonId: string | null
 }
 
-export default function ScheduleClient({ scheduled, finished, seasons, currentSeasonId }: ScheduleClientProps) {
+export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: ScheduleClientProps) {
   const [search, setSearch] = useState('')
 
   // Filter function
@@ -47,7 +46,6 @@ export default function ScheduleClient({ scheduled, finished, seasons, currentSe
 
   // Filtered lists
   const filteredScheduled = useMemo(() => scheduled.filter(matchSearch), [scheduled, search])
-  const filteredFinished = useMemo(() => finished.filter(matchSearch), [finished, search])
 
   // Group by date (formatDayDate returns standard string representing the day)
   const groupMatches = (matches: Match[]) => {
@@ -63,7 +61,6 @@ export default function ScheduleClient({ scheduled, finished, seasons, currentSe
   }
 
   const groupedScheduled = useMemo(() => groupMatches(filteredScheduled), [filteredScheduled])
-  const groupedFinished = useMemo(() => groupMatches(filteredFinished), [filteredFinished])
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
@@ -74,9 +71,9 @@ export default function ScheduleClient({ scheduled, finished, seasons, currentSe
             <Calendar className="w-5 h-5 md:w-6 md:h-6 text-neon-blue" />
           </div>
           <div>
-            <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Jadwal & Hasil</h1>
+            <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Jadwal Pertandingan</h1>
             <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              {finished.length} selesai · {scheduled.length} mendatang
+              {scheduled.length} laga mendatang
             </p>
           </div>
         </div>
@@ -98,7 +95,7 @@ export default function ScheduleClient({ scheduled, finished, seasons, currentSe
       </div>
 
       {/* No Results Fallback */}
-      {search && filteredScheduled.length === 0 && filteredFinished.length === 0 && (
+      {search && filteredScheduled.length === 0 && (
         <div className="text-center py-20 bg-secondary/20 rounded-2xl border border-border/50">
           <Search className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg text-foreground font-semibold">Tidak ada hasil ditemukan</p>
@@ -131,32 +128,7 @@ export default function ScheduleClient({ scheduled, finished, seasons, currentSe
         </section>
       )}
 
-      {/* Finished Matches */}
-      {groupedFinished.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-3">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <h2 className="font-heading text-xl font-bold text-foreground">Hasil Pertandingan</h2>
-          </div>
-
-          <div className="space-y-8">
-            {groupedFinished.map(([dateConfig, dayMatches]) => (
-              <div key={dateConfig}>
-                <div className="inline-block px-3 py-1 mb-4 rounded-lg bg-green-500/10 text-green-400 font-semibold text-sm border border-green-500/20">
-                  {dateConfig}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
-                  {dayMatches.map(match => (
-                    <MatchCard key={match.id} match={match} />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {!search && scheduled.length === 0 && finished.length === 0 && (
+      {!search && scheduled.length === 0 && (
         <div className="text-center py-20">
           <Calendar className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg text-muted-foreground">Belum ada pertandingan dijadwalkan uuntuk musim ini.</p>
