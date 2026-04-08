@@ -1,4 +1,4 @@
-export const revalidate = 60
+export const revalidate = 0
 
 import { prisma } from '@/lib/prisma'
 import ScheduleClient from '@/components/public/ScheduleClient'
@@ -9,19 +9,27 @@ export const metadata: Metadata = {
   description: 'Lihat jadwal dan hasil pertandingan liga eFootball',
 }
 
-async function getMatches() {
-  const season = await prisma.season.findFirst({
-    where: { isActive: true },
-    select: { id: true, name: true }
+async function getMatches(seasonIdParam?: string) {
+  const seasons = await prisma.season.findMany({
+    orderBy: { startDate: 'desc' }
   })
 
-  if (!season) {
-    return { scheduled: [], finished: [] }
+  // Jika parameter dikirim, pakai itu. Kalau tidak, default ke yang Aktif, atau fallback terbawah
+  let targetSeason = undefined
+  if (seasonIdParam) {
+    targetSeason = seasons.find(s => s.id === seasonIdParam)
+  }
+  if (!targetSeason) {
+    targetSeason = seasons.find(s => s.isActive) || seasons[0]
+  }
+
+  if (!targetSeason) {
+    return { scheduled: [], finished: [], seasons: [], activeSeasonId: null }
   }
 
   const [scheduled, finished] = await Promise.all([
     prisma.match.findMany({
-      where: { status: { in: ['SCHEDULED', 'LIVE'] }, seasonId: season.id },
+      where: { status: { in: ['SCHEDULED', 'LIVE'] }, seasonId: targetSeason.id },
       select: {
         id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
         homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
@@ -30,7 +38,7 @@ async function getMatches() {
       orderBy: { scheduledAt: 'asc' },
     }),
     prisma.match.findMany({
-      where: { status: 'FINISHED', seasonId: season.id },
+      where: { status: 'FINISHED', seasonId: targetSeason.id },
       select: {
         id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
         homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
@@ -40,11 +48,11 @@ async function getMatches() {
     }),
   ])
   
-  return { scheduled, finished }
+  return { scheduled, finished, seasons, activeSeasonId: targetSeason.id }
 }
 
-export default async function JadwalPage() {
-  const { scheduled, finished } = await getMatches()
+export default async function JadwalPage({ searchParams }: { searchParams: { season?: string } }) {
+  const { scheduled, finished, seasons, activeSeasonId } = await getMatches(searchParams.season)
   
-  return <ScheduleClient scheduled={scheduled} finished={finished} />
+  return <ScheduleClient scheduled={scheduled} finished={finished} seasons={seasons} currentSeasonId={activeSeasonId} />
 }

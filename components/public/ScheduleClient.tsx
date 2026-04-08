@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import MatchCard from '@/components/public/MatchCard'
 import { Calendar, CheckCircle, Clock, Search } from 'lucide-react'
 import { formatDayDate } from '@/lib/utils'
+import SeasonSelector from '@/components/public/SeasonSelector'
 
 interface Player {
   id: string
@@ -25,9 +26,11 @@ interface Match {
 interface ScheduleClientProps {
   scheduled: Match[]
   finished: Match[]
+  seasons: {id: string, name: string, isActive: boolean}[]
+  currentSeasonId: string | null
 }
 
-export default function ScheduleClient({ scheduled, finished }: ScheduleClientProps) {
+export default function ScheduleClient({ scheduled, finished, seasons, currentSeasonId }: ScheduleClientProps) {
   const [search, setSearch] = useState('')
 
   // Filter function
@@ -72,21 +75,25 @@ export default function ScheduleClient({ scheduled, finished }: ScheduleClientPr
           </div>
           <div>
             <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Jadwal & Hasil</h1>
-            <p className="text-xs md:text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
               {finished.length} selesai · {scheduled.length} mendatang
             </p>
           </div>
         </div>
 
-        <div className="relative w-full md:w-72 mt-2 md:mt-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Cari nama player..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0 items-start sm:items-center">
+          <SeasonSelector seasons={seasons} currentSeasonId={currentSeasonId || undefined} />
+          
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Cari nama player..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
+            />
+          </div>
         </div>
       </div>
 
