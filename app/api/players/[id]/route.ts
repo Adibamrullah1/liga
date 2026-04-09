@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { playerSchema } from '@/lib/validations/player'
@@ -42,6 +43,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         city: data.city ?? null,
       },
     })
+
+    revalidateTag('players')
+    revalidateTag('matches')
+    revalidateTag('seasons')
+
     return NextResponse.json(player)
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -56,7 +62,17 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     const session = await auth()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    await prisma.player.delete({ where: { id: params.id } })
+    await prisma.$transaction([
+      prisma.match.deleteMany({
+        where: { OR: [{ homePlayerId: params.id }, { awayPlayerId: params.id }] },
+      }),
+      prisma.player.delete({ where: { id: params.id } }),
+    ])
+
+    revalidateTag('players')
+    revalidateTag('matches')
+    revalidateTag('seasons')
+
     return NextResponse.json({ message: 'Player deleted' })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete player' }, { status: 500 })

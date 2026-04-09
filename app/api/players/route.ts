@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { playerSchema } from '@/lib/validations/player'
@@ -49,6 +50,9 @@ export async function POST(req: Request) {
         username,
       },
     })
+
+    revalidateTag('players')
+    
     return NextResponse.json(player, { status: 201 })
   } catch (error: any) {
     if (error.name === 'ZodError') {
