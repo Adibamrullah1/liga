@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Search, ClipboardCheck, Pencil, Calendar, History, Gamepad2 } from 'lucide-react'
 import { formatShortDate, formatTime, getStatusBadgeColor, getStatusLabel, formatDayDate } from '@/lib/utils'
 import DeleteButton from '@/components/admin/DeleteButton'
@@ -32,6 +33,7 @@ interface MatchTableClientProps {
 }
 
 export default function MatchTableClient({ matches, seasons, currentSeasonId }: MatchTableClientProps) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
 
   // Filter matches based on search query
@@ -104,7 +106,9 @@ export default function MatchTableClient({ matches, seasons, currentSeasonId }: 
                   </thead>
                   <tbody>
                     {dayMatches.map((match) => (
-                      <tr key={match.id} className="border-b border-border/30 hover:bg-white/5 transition-colors group">
+                      <tr key={match.id} 
+                          onClick={() => isHistory && router.push(`/admin/pertandingan/${match.id}/hasil`)}
+                          className={`border-b border-border/30 hover:bg-white/5 transition-colors group ${isHistory ? 'cursor-pointer' : ''}`}>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-semibold text-foreground text-xs sm:text-sm">{match.homePlayer.name}</span>
@@ -126,7 +130,7 @@ export default function MatchTableClient({ matches, seasons, currentSeasonId }: 
                         <td className="text-center py-3 px-3 text-muted-foreground text-xs hidden sm:table-cell">
                           <div className="font-semibold text-primary">{formatTime(match.scheduledAt)} WIB</div>
                         </td>
-                        <td className="text-right py-3 px-4">
+                        <td className="text-right py-3 px-4" onClick={(e) => e.stopPropagation()}>
                           <div className="flex flex-wrap items-center justify-end gap-1.5 opacity-100 sm:opacity-50 sm:group-hover:opacity-100 transition-opacity">
                             {match.status === 'SCHEDULED' && (
                               <RescheduleButton
