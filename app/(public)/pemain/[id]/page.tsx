@@ -10,79 +10,77 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return { title: `${player.name} | Profil Pemain eFootball` }
 }
 
-const getPlayerStats = unstable_cache(
-  async (playerId: string) => {
-    const player = await prisma.player.findUnique({
-      where: { id: playerId },
-    })
+export const dynamic = 'force-dynamic'
 
-    if (!player) return null
+async function getPlayerStats(playerId: string) {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+  })
 
-    // Ambil musim aktif untuk menghitung laga di musim ini saja
-    const activeSeason = await prisma.season.findFirst({
-      where: { isActive: true },
-      orderBy: { startDate: 'desc' }
-    })
+  if (!player) return null
 
-    if (!activeSeason) {
-      return { player, stats: { played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0, remainingMatches: 0, winRate: 0, form: [] }, scheduledMatches: [], finishedMatches: [] }
-    }
+  // Ambil musim aktif untuk menghitung laga di musim ini saja
+  const activeSeason = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { startDate: 'desc' }
+  })
 
-    const matches = await prisma.match.findMany({
-      where: {
-        seasonId: activeSeason.id,
-        OR: [{ homePlayerId: playerId }, { awayPlayerId: playerId }]
-      },
-      select: {
-        id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
-        homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
-        awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
-        season: { select: { name: true } },
-      },
-      orderBy: { scheduledAt: 'desc' } // dari terbaru ke terlama
-    })
+  if (!activeSeason) {
+    return { player, stats: { played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0, remainingMatches: 0, winRate: 0, form: [] }, scheduledMatches: [], finishedMatches: [] }
+  }
 
-    const scheduledMatches = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'LIVE').reverse() // dari lama ke baru untuk jadwal mendatang
-    const finishedMatches = matches.filter(m => m.status === 'FINISHED') // sudah desc
+  const matches = await prisma.match.findMany({
+    where: {
+      seasonId: activeSeason.id,
+      OR: [{ homePlayerId: playerId }, { awayPlayerId: playerId }]
+    },
+    select: {
+      id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
+      homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+      awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+      season: { select: { name: true } },
+    },
+    orderBy: { scheduledAt: 'desc' } // dari terbaru ke terlama
+  })
 
-    let played = 0, won = 0, drawn = 0, lost = 0, goalsFor = 0, goalsAgainst = 0, points = 0
-    let form: string[] = [] // Ambil 5 terakhir
+  const scheduledMatches = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'LIVE').reverse() // dari lama ke baru untuk jadwal mendatang
+  const finishedMatches = matches.filter(m => m.status === 'FINISHED') // sudah desc
 
-    // Kalkulasi
-    // Karena finishedMatches urutannya desc (terakhir dimainkan di awal), kita ambil 5 pertama untuk form, lalu dibalik supaya kiri = paling lama, kanan = terbaru
-    finishedMatches.forEach((m, index) => {
-      played++
-      const isHome = m.homePlayer.id === playerId
-      const pScore = isHome ? m.homeScore! : m.awayScore!
-      const oScore = isHome ? m.awayScore! : m.homeScore!
+  let played = 0, won = 0, drawn = 0, lost = 0, goalsFor = 0, goalsAgainst = 0, points = 0
+  let form: string[] = [] // Ambil 5 terakhir
 
-      goalsFor += pScore
-      goalsAgainst += oScore
+  // Kalkulasi
+  // Karena finishedMatches urutannya desc (terakhir dimainkan di awal), kita ambil 5 pertama untuk form, lalu dibalik supaya kiri = paling lama, kanan = terbaru
+  finishedMatches.forEach((m, index) => {
+    played++
+    const isHome = m.homePlayer.id === playerId
+    const pScore = isHome ? m.homeScore! : m.awayScore!
+    const oScore = isHome ? m.awayScore! : m.homeScore!
 
-      let result = 'D'
-      if (pScore > oScore) { won++; points += 3; result = 'W' }
-      else if (pScore < oScore) { lost++; result = 'L' }
-      else { drawn++; points += 1 }
+    goalsFor += pScore
+    goalsAgainst += oScore
 
-      if (index < 5) form.push(result)
-    })
+    let result = 'D'
+    if (pScore > oScore) { won++; points += 3; result = 'W' }
+    else if (pScore < oScore) { lost++; result = 'L' }
+    else { drawn++; points += 1 }
 
-    form = form.reverse() // Supaya W W D L W bacanya rapi dari kiri ke kanan (kanan paling baru)
+    if (index < 5) form.push(result)
+  })
 
-    const goalDiff = goalsFor - goalsAgainst
-    const remainingMatches = scheduledMatches.length
-    const winRate = played > 0 ? Math.round((won / played) * 100) : 0
+  form = form.reverse() // Supaya W W D L W bacanya rapi dari kiri ke kanan (kanan paling baru)
 
-    return {
-      player,
-      stats: { played, won, drawn, lost, goalsFor, goalsAgainst, goalDiff, points, remainingMatches, winRate, form },
-      scheduledMatches,
-      finishedMatches
-    }
-  },
-  ['public-player-profile'],
-  { revalidate: 60, tags: ['players', 'matches', 'seasons'] }
-)
+  const goalDiff = goalsFor - goalsAgainst
+  const remainingMatches = scheduledMatches.length
+  const winRate = played > 0 ? Math.round((won / played) * 100) : 0
+
+  return {
+    player,
+    stats: { played, won, drawn, lost, goalsFor, goalsAgainst, goalDiff, points, remainingMatches, winRate, form },
+    scheduledMatches,
+    finishedMatches
+  }
+}
 
 export default async function PlayerDetailPage({ params }: { params: { id: string } }) {
   const data = await getPlayerStats(params.id)
