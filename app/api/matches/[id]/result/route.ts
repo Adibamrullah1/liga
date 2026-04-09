@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { resultSchema } from '@/lib/validations/match'
@@ -27,6 +28,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
       return match
     })
+
+    // Bersihkan cache publik agar sinkron tanpa delay
+    revalidateTag('matches')
+    revalidateTag('players')
+    revalidateTag('seasons')
 
     return NextResponse.json(result)
   } catch (error: any) {

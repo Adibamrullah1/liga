@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 
@@ -40,6 +41,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       },
       include: { homePlayer: true, awayPlayer: true },
     })
+
+    revalidateTag('matches')
+    revalidateTag('seasons')
+    revalidateTag('players')
+
     return NextResponse.json(match)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update match' }, { status: 500 })
@@ -52,6 +58,11 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     await prisma.match.delete({ where: { id: params.id } })
+
+    revalidateTag('matches')
+    revalidateTag('seasons')
+    revalidateTag('players')
+
     return NextResponse.json({ message: 'Match deleted' })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete match' }, { status: 500 })

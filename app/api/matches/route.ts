@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 
@@ -54,6 +55,11 @@ export async function POST(req: Request) {
       },
       include: { homePlayer: true, awayPlayer: true, season: true },
     })
+
+    revalidateTag('matches')
+    revalidateTag('seasons')
+    revalidateTag('players')
+
     return NextResponse.json(match, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create match' }, { status: 500 })
