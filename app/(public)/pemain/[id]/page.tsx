@@ -1,43 +1,100 @@
-export const revalidate = 60
-
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Target, Trophy, Star, Clock } from 'lucide-react'
-import { getPositionLabel, formatShortDate } from '@/lib/utils'
+import PlayerProfileClient from '@/components/public/PlayerProfileClient'
+import type { Metadata } from 'next'
+import { unstable_cache } from 'next/cache'
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const player = await prisma.player.findUnique({ where: { id: params.id } })
+  if (!player) return { title: 'Pemain Tidak Ditemukan' }
+  return { title: `${player.name} | Profil Pemain eFootball` }
+}
+
+const getPlayerStats = unstable_cache(
+  async (playerId: string) => {
+    const player = await prisma.player.findUnique({
+      where: { id: playerId },
+    })
+
+    if (!player) return null
+
+    // Ambil musim aktif untuk menghitung laga di musim ini saja
+    const activeSeason = await prisma.season.findFirst({
+      where: { isActive: true },
+      orderBy: { startDate: 'desc' }
+    })
+
+    if (!activeSeason) {
+      return { player, stats: { played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0, remainingMatches: 0, winRate: 0, form: [] }, scheduledMatches: [], finishedMatches: [] }
+    }
+
+    const matches = await prisma.match.findMany({
+      where: {
+        seasonId: activeSeason.id,
+        OR: [{ homePlayerId: playerId }, { awayPlayerId: playerId }]
+      },
+      select: {
+        id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
+        homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+        awayPlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
+        season: { select: { name: true } },
+      },
+      orderBy: { scheduledAt: 'desc' } // dari terbaru ke terlama
+    })
+
+    const scheduledMatches = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'LIVE').reverse() // dari lama ke baru untuk jadwal mendatang
+    const finishedMatches = matches.filter(m => m.status === 'FINISHED') // sudah desc
+
+    let played = 0, won = 0, drawn = 0, lost = 0, goalsFor = 0, goalsAgainst = 0, points = 0
+    let form: string[] = [] // Ambil 5 terakhir
+
+    // Kalkulasi
+    // Karena finishedMatches urutannya desc (terakhir dimainkan di awal), kita ambil 5 pertama untuk form, lalu dibalik supaya kiri = paling lama, kanan = terbaru
+    finishedMatches.forEach((m, index) => {
+      played++
+      const isHome = m.homePlayer.id === playerId
+      const pScore = isHome ? m.homeScore! : m.awayScore!
+      const oScore = isHome ? m.awayScore! : m.homeScore!
+
+      goalsFor += pScore
+      goalsAgainst += oScore
+
+      let result = 'D'
+      if (pScore > oScore) { won++; points += 3; result = 'W' }
+      else if (pScore < oScore) { lost++; result = 'L' }
+      else { drawn++; points += 1 }
+
+      if (index < 5) form.push(result)
+    })
+
+    form = form.reverse() // Supaya W W D L W bacanya rapi dari kiri ke kanan (kanan paling baru)
+
+    const goalDiff = goalsFor - goalsAgainst
+    const remainingMatches = scheduledMatches.length
+    const winRate = played > 0 ? Math.round((won / played) * 100) : 0
+
+    return {
+      player,
+      stats: { played, won, drawn, lost, goalsFor, goalsAgainst, goalDiff, points, remainingMatches, winRate, form },
+      scheduledMatches,
+      finishedMatches
+    }
+  },
+  ['public-player-profile'],
+  { revalidate: 60, tags: ['players', 'matches', 'seasons'] }
+)
 
 export default async function PlayerDetailPage({ params }: { params: { id: string } }) {
-  const player = await prisma.player.findUnique({
-    where: { id: params.id },
-  })
+  const data = await getPlayerStats(params.id)
 
-  if (!player) notFound()
+  if (!data) notFound()
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Link href="/pemain" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Kembali ke Daftar Player
-      </Link>
-
-      {/* Player Header */}
-      <div className="game-card p-8 mb-8">
-        <div className="flex flex-col md:flex-row items-start gap-6">
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-secondary to-muted flex items-center justify-center text-4xl font-bold text-primary/50 shrink-0 overflow-hidden">
-            {player.avatarUrl ? (
-              <img src={player.avatarUrl} alt={player.name} className="w-full h-full object-cover" />
-            ) : player.shortName}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="font-heading text-4xl font-bold text-foreground">{player.name}</h1>
-              <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">{player.shortName}</span>
-            </div>
-            <p className="text-muted-foreground">@{player.username}</p>
-            {player.city && <p className="text-sm text-muted-foreground mt-2">📍 {player.city}</p>}
-            {player.description && <p className="text-sm text-muted-foreground mt-2">{player.description}</p>}
-          </div>
-        </div>
-      </div>
-    </div>
+    <PlayerProfileClient 
+      player={data.player}
+      stats={data.stats}
+      scheduledMatches={data.scheduledMatches}
+      finishedMatches={data.finishedMatches}
+    />
   )
 }
