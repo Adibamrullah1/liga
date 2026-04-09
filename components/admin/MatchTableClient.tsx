@@ -30,9 +30,11 @@ interface MatchTableClientProps {
   matches: Match[]
   seasons: {id: string, name: string, isActive: boolean}[]
   currentSeasonId: string | null
+  hideScheduled?: boolean
+  hideHistory?: boolean
 }
 
-export default function MatchTableClient({ matches, seasons, currentSeasonId }: MatchTableClientProps) {
+export default function MatchTableClient({ matches, seasons, currentSeasonId, hideScheduled, hideHistory }: MatchTableClientProps) {
   const router = useRouter()
   const [search, setSearch] = useState('')
 
@@ -204,7 +206,7 @@ export default function MatchTableClient({ matches, seasons, currentSeasonId }: 
       )}
 
       {/* JADWAL MENDATANG SECTION */}
-      {groupedScheduled.length > 0 && (
+      {!hideScheduled && groupedScheduled.length > 0 && (
         <div className="space-y-4 pt-4">
           <div className="flex items-center gap-2 border-b border-border/50 pb-2">
             <Gamepad2 className="w-5 h-5 text-neon" />
@@ -215,7 +217,7 @@ export default function MatchTableClient({ matches, seasons, currentSeasonId }: 
       )}
 
       {/* RIWAYAT / SELESAI SECTION */}
-      {groupedFinished.length > 0 && (
+      {!hideHistory && groupedFinished.length > 0 && (
         <div className="space-y-4 pt-8">
           <div className="flex items-center gap-2 border-b border-border/50 pb-2">
             <History className="w-5 h-5 text-green-400" />

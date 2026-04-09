@@ -44,16 +44,15 @@ export default async function AdminPertandinganPage({ searchParams }: { searchPa
   })
 
   const scheduled = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'LIVE').length
-  const finished = matches.filter(m => m.status === 'FINISHED').length
 
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Kelola Pertandingan</h1>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Jadwal Pertandingan</h1>
           <p className="text-xs md:text-sm text-muted-foreground mr-1">
-            {matches.length} total · {scheduled} mendatang · {finished} selesai
+            {scheduled} total mendatang untuk musim ini
           </p>
         </div>
         <Link href="/admin/pertandingan/tambah"
@@ -62,8 +61,7 @@ export default async function AdminPertandinganPage({ searchParams }: { searchPa
         </Link>
       </div>
 
-      {/* Match Table Client (Search & Date Grouping) */}
-      <MatchTableClient matches={matches} seasons={seasons} currentSeasonId={targetSeason.id} />
+      <MatchTableClient matches={matches} seasons={seasons} currentSeasonId={targetSeason.id} hideHistory={true} />
     </div>
   )
 }
