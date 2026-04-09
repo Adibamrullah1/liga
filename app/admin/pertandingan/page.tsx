@@ -4,9 +4,36 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import MatchTableClient from '@/components/admin/MatchTableClient'
+import type { Metadata } from 'next'
 
-export default async function AdminPertandinganPage() {
+export const metadata: Metadata = {
+  title: 'Kelola Pertandingan | Admin',
+}
+
+export default async function AdminPertandinganPage({ searchParams }: { searchParams: { season?: string } }) {
+  const seasons = await prisma.season.findMany({
+    orderBy: { startDate: 'desc' }
+  })
+
+  let targetSeason = undefined
+  if (searchParams.season) {
+    targetSeason = seasons.find(s => s.id === searchParams.season)
+  }
+  if (!targetSeason) {
+    targetSeason = seasons.find(s => s.isActive) || seasons[0]
+  }
+
+  if (!targetSeason) {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Kelola Pertandingan</h1>
+        <p>Belum ada Musim dibuat.</p>
+      </div>
+    )
+  }
+
   const matches = await prisma.match.findMany({
+    where: { seasonId: targetSeason.id },
     select: {
       id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
       homePlayer: { select: { id: true, name: true, shortName: true } },
@@ -25,7 +52,7 @@ export default async function AdminPertandinganPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Kelola Pertandingan</h1>
-          <p className="text-xs md:text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground mr-1">
             {matches.length} total · {scheduled} mendatang · {finished} selesai
           </p>
         </div>
@@ -36,7 +63,7 @@ export default async function AdminPertandinganPage() {
       </div>
 
       {/* Match Table Client (Search & Date Grouping) */}
-      <MatchTableClient matches={matches} />
+      <MatchTableClient matches={matches} seasons={seasons} currentSeasonId={targetSeason.id} />
     </div>
   )
 }

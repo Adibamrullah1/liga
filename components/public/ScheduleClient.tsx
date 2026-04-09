@@ -36,12 +36,13 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
   const matchSearch = (match: Match) => {
     if (!search.trim()) return true
     const q = search.toLowerCase()
-    return (
-      match.homePlayer.name.toLowerCase().includes(q) ||
-      match.awayPlayer.name.toLowerCase().includes(q) ||
-      match.homePlayer.shortName.toLowerCase().includes(q) ||
-      match.awayPlayer.shortName.toLowerCase().includes(q)
-    )
+    
+    const homeName = match.homePlayer.name?.toLowerCase() || ''
+    const awayName = match.awayPlayer.name?.toLowerCase() || ''
+    const homeShort = match.homePlayer.shortName?.toLowerCase() || ''
+    const awayShort = match.awayPlayer.shortName?.toLowerCase() || ''
+    
+    return homeName.includes(q) || awayName.includes(q) || homeShort.includes(q) || awayShort.includes(q)
   }
 
   // Filtered lists

@@ -6,6 +6,7 @@ import { Search, ClipboardCheck, Pencil, Calendar } from 'lucide-react'
 import { formatShortDate, formatTime, getStatusBadgeColor, getStatusLabel, formatDayDate } from '@/lib/utils'
 import DeleteButton from '@/components/admin/DeleteButton'
 import RescheduleButton from '@/components/admin/RescheduleButton'
+import SeasonSelector from '@/components/public/SeasonSelector'
 
 interface Player {
   id: string
@@ -26,21 +27,25 @@ interface Match {
 
 interface MatchTableClientProps {
   matches: Match[]
+  seasons: {id: string, name: string, isActive: boolean}[]
+  currentSeasonId: string | null
 }
 
-export default function MatchTableClient({ matches }: MatchTableClientProps) {
+export default function MatchTableClient({ matches, seasons, currentSeasonId }: MatchTableClientProps) {
   const [search, setSearch] = useState('')
 
   // Filter matches based on search query
   const filteredMatches = useMemo(() => {
     if (!search.trim()) return matches
     const q = search.toLowerCase()
-    return matches.filter(match => 
-      match.homePlayer.name.toLowerCase().includes(q) ||
-      match.awayPlayer.name.toLowerCase().includes(q) ||
-      match.homePlayer.shortName.toLowerCase().includes(q) ||
-      match.awayPlayer.shortName.toLowerCase().includes(q)
-    )
+    return matches.filter(match => {
+      const homeName = match.homePlayer.name?.toLowerCase() || ''
+      const awayName = match.awayPlayer.name?.toLowerCase() || ''
+      const homeShort = match.homePlayer.shortName?.toLowerCase() || ''
+      const awayShort = match.awayPlayer.shortName?.toLowerCase() || ''
+      
+      return homeName.includes(q) || awayName.includes(q) || homeShort.includes(q) || awayShort.includes(q)
+    })
   }, [matches, search])
 
   // Group matches by day/date
@@ -58,16 +63,20 @@ export default function MatchTableClient({ matches }: MatchTableClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Cari nama player..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
-        />
+      {/* Search Bar & Season Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <SeasonSelector seasons={seasons} currentSeasonId={currentSeasonId || undefined} />
+
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Cari nama player..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
+          />
+        </div>
       </div>
 
       {/* No Results Fallback */}
