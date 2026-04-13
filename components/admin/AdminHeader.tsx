@@ -8,10 +8,10 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ session }: AdminHeaderProps) {
   return (
-    <header className="h-16 border-b border-border/50 bg-gaming-surface/50 backdrop-blur-xl px-6 flex items-center justify-between">
-      <div>
-        <h2 className="font-heading text-lg font-bold text-foreground">Admin Panel</h2>
-        <p className="text-xs text-muted-foreground">Liga eFootball Mobile</p>
+    <header className="h-16 border-b border-border/50 bg-gaming-surface/50 backdrop-blur-xl px-4 md:px-6 flex items-center justify-between">
+      <div className="pl-12 md:pl-0">
+        <h2 className="font-heading text-base md:text-lg font-bold text-foreground truncate">Admin Panel</h2>
+        <p className="text-[10px] md:text-xs text-muted-foreground truncate">Liga eFootball Mobile</p>
       </div>
 
       <div className="flex items-center gap-4">

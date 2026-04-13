@@ -26,7 +26,7 @@ export default async function AdminPemainPage() {
 
       <div className="game-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[650px] whitespace-nowrap">
             <thead>
               <tr className="border-b border-border/50">
                 <th className="text-left py-3 px-4 text-muted-foreground font-semibold text-xs uppercase">Player</th>

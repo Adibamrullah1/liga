@@ -123,23 +123,23 @@ export default function AdminMusimPage() {
 
       <div className="space-y-3">
         {seasons.map((season: any) => (
-          <div key={season.id} className="game-card p-5 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                <CalendarClock className="w-6 h-6 text-primary" />
+          <div key={season.id} className="game-card p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <CalendarClock className="w-5 h-5 md:w-6 md:h-6 text-primary" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">{season.name}</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {new Date(season.startDate).toLocaleDateString('id-ID')} — {new Date(season.endDate).toLocaleDateString('id-ID')}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">{season._count?.matches || 0} pertandingan</span>
+            <div className="flex items-center flex-wrap gap-2 md:gap-4">
+              <span className="text-xs md:text-sm text-muted-foreground bg-secondary/50 px-2 py-1 rounded-md">{season._count?.matches || 0} laga</span>
               {season.isActive && (
-                <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 text-xs font-semibold flex items-center gap-1">
-                  <CheckCircle className="w-3.5 h-3.5" /> Aktif
+                <span className="px-2 md:px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 text-[10px] md:text-xs font-semibold flex items-center gap-1">
+                  <CheckCircle className="w-3 md:w-3.5 h-3 md:h-3.5" /> Aktif
                 </span>
               )}
               <button onClick={() => handleEdit(season)}
