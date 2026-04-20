@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import MatchCard from '@/components/public/MatchCard'
-import { Calendar, CheckCircle, Clock, Search } from 'lucide-react'
+import { Calendar, CheckCircle, Clock, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+
+const ITEMS_PER_PAGE = 24
 import { formatDayDate } from '@/lib/utils'
 import SeasonSelector from '@/components/public/SeasonSelector'
 
@@ -31,22 +33,50 @@ interface ScheduleClientProps {
 
 export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: ScheduleClientProps) {
   const [search, setSearch] = useState('')
+  const [dateSearch, setDateSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   // Filter function
-  const matchSearch = (match: Match) => {
-    if (!search.trim()) return true
-    const q = search.toLowerCase()
-    
-    const homeName = match.homePlayer.name?.toLowerCase() || ''
-    const awayName = match.awayPlayer.name?.toLowerCase() || ''
-    const homeShort = match.homePlayer.shortName?.toLowerCase() || ''
-    const awayShort = match.awayPlayer.shortName?.toLowerCase() || ''
-    
-    return homeName.includes(q) || awayName.includes(q) || homeShort.includes(q) || awayShort.includes(q)
+  const matchFilter = (match: Match) => {
+    let isValid = true
+
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      const homeName = match.homePlayer.name?.toLowerCase() || ''
+      const awayName = match.awayPlayer.name?.toLowerCase() || ''
+      const homeShort = match.homePlayer.shortName?.toLowerCase() || ''
+      const awayShort = match.awayPlayer.shortName?.toLowerCase() || ''
+      isValid = homeName.includes(q) || awayName.includes(q) || homeShort.includes(q) || awayShort.includes(q)
+    }
+
+    if (isValid && dateSearch) {
+      try {
+        const matchDateObj = new Date(match.scheduledAt)
+        const matchYear = matchDateObj.getFullYear()
+        const matchMonth = String(matchDateObj.getMonth() + 1).padStart(2, '0')
+        const matchDay = String(matchDateObj.getDate()).padStart(2, '0')
+        const matchDateStr = `${matchYear}-${matchMonth}-${matchDay}`
+        
+        if (matchDateStr !== dateSearch) {
+          isValid = false
+        }
+      } catch (e) {
+        isValid = true
+      }
+    }
+
+    return isValid
   }
 
   // Filtered lists
-  const filteredScheduled = useMemo(() => scheduled.filter(matchSearch), [scheduled, search])
+  const filteredScheduled = useMemo(() => scheduled.filter(matchFilter), [scheduled, search, dateSearch])
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredScheduled.length / ITEMS_PER_PAGE))
+  const paginatedScheduled = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE
+    return filteredScheduled.slice(start, start + ITEMS_PER_PAGE)
+  }, [filteredScheduled, page])
 
   // Group by date (formatDayDate returns standard string representing the day)
   const groupMatches = (matches: Match[]) => {
@@ -61,7 +91,7 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
     return Array.from(grouped.entries())
   }
 
-  const groupedScheduled = useMemo(() => groupMatches(filteredScheduled), [filteredScheduled])
+  const groupedScheduled = useMemo(() => groupMatches(paginatedScheduled), [paginatedScheduled])
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
@@ -88,19 +118,28 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
               type="text"
               placeholder="Cari nama player..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
+            />
+          </div>
+          
+          <div className="relative w-full sm:w-auto">
+            <input
+              type="date"
+              value={dateSearch}
+              onChange={(e) => { setDateSearch(e.target.value); setPage(1); }}
+              className="w-full sm:w-40 px-3 py-2.5 rounded-xl bg-secondary border border-border/50 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-muted-foreground"
             />
           </div>
         </div>
       </div>
 
       {/* No Results Fallback */}
-      {search && filteredScheduled.length === 0 && (
+      {(search || dateSearch) && filteredScheduled.length === 0 && (
         <div className="text-center py-20 bg-secondary/20 rounded-2xl border border-border/50">
           <Search className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg text-foreground font-semibold">Tidak ada hasil ditemukan</p>
-          <p className="text-sm text-muted-foreground">Coba gunakan kata kunci nama player yang lain.</p>
+          <p className="text-sm text-muted-foreground">Coba gunakan kata kunci yang lain atau ubah tanggal.</p>
         </div>
       )}
 
@@ -126,13 +165,37 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
               </div>
             ))}
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-10">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed border border-border/50 transition-colors text-sm font-medium"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Sebelumnya
+              </button>
+              <div className="text-sm text-muted-foreground font-medium px-2">
+                Halaman {page} dari {totalPages}
+              </div>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed border border-border/50 transition-colors text-sm font-medium"
+              >
+                Selanjutnya
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </section>
       )}
 
-      {!search && scheduled.length === 0 && (
+      {!(search || dateSearch) && scheduled.length === 0 && (
         <div className="text-center py-20">
           <Calendar className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-          <p className="text-lg text-muted-foreground">Belum ada pertandingan dijadwalkan uuntuk musim ini.</p>
+          <p className="text-lg text-muted-foreground">Belum ada pertandingan dijadwalkan untuk musim ini.</p>
         </div>
       )}
     </div>

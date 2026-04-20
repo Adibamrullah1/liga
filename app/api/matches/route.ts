@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { checkEligibility } from '@/lib/services/matchmaking.service'
 
 export async function GET(req: Request) {
   try {
@@ -41,9 +42,18 @@ export async function POST(req: Request) {
 
     const body = await req.json()
 
-    if (body.homePlayerId === body.awayPlayerId) {
-      return NextResponse.json({ error: 'Player home dan away tidak boleh sama' }, { status: 400 })
+    // ── Matchmaking Quota Validation ──────────────────────
+    const eligibility = await checkEligibility(body.homePlayerId, body.awayPlayerId)
+    if (!eligibility.eligible) {
+      return NextResponse.json(
+        {
+          error: eligibility.reasons.join('. '),
+          details: eligibility,
+        },
+        { status: 422 }
+      )
     }
+    // ─────────────────────────────────────────────────────
 
     const match = await prisma.match.create({
       data: {
