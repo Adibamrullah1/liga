@@ -48,7 +48,19 @@ export default function MatchTableClient({ matches, seasons, currentSeasonId, hi
       const homeShort = match.homePlayer.shortName?.toLowerCase() || ''
       const awayShort = match.awayPlayer.shortName?.toLowerCase() || ''
       
-      return homeName.includes(q) || awayName.includes(q) || homeShort.includes(q) || awayShort.includes(q)
+      const matchStringHomeAway = `${homeName} vs ${awayName}`
+      const matchStringAwayHome = `${awayName} vs ${homeName}`
+      const matchStringHomeAwayV = `${homeName} v ${awayName}`
+      const matchStringAwayHomeV = `${awayName} v ${homeName}`
+      
+      return homeName.includes(q) || 
+             awayName.includes(q) || 
+             homeShort.includes(q) || 
+             awayShort.includes(q) ||
+             matchStringHomeAway.includes(q) ||
+             matchStringAwayHome.includes(q) ||
+             matchStringHomeAwayV.includes(q) ||
+             matchStringAwayHomeV.includes(q)
     })
   }, [matches, search])
 

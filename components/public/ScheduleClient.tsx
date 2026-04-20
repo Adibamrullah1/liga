@@ -46,7 +46,20 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
       const awayName = match.awayPlayer.name?.toLowerCase() || ''
       const homeShort = match.homePlayer.shortName?.toLowerCase() || ''
       const awayShort = match.awayPlayer.shortName?.toLowerCase() || ''
-      isValid = homeName.includes(q) || awayName.includes(q) || homeShort.includes(q) || awayShort.includes(q)
+      
+      const matchStringHomeAway = `${homeName} vs ${awayName}`
+      const matchStringAwayHome = `${awayName} vs ${homeName}`
+      const matchStringHomeAwayV = `${homeName} v ${awayName}`
+      const matchStringAwayHomeV = `${awayName} v ${homeName}`
+      
+      isValid = homeName.includes(q) || 
+                awayName.includes(q) || 
+                homeShort.includes(q) || 
+                awayShort.includes(q) ||
+                matchStringHomeAway.includes(q) ||
+                matchStringAwayHome.includes(q) ||
+                matchStringHomeAwayV.includes(q) ||
+                matchStringAwayHomeV.includes(q)
     }
 
     if (isValid && dateSearch) {
