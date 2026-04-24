@@ -30,8 +30,8 @@ export default function StandingsTable({ standings, compact = false }: Standings
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto relative">
+      <table className="w-full text-sm min-w-[700px] md:min-w-full">
         <thead>
           <tr className="border-b border-border/50 bg-secondary/30">
             <th className="text-left py-3 px-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10">#</th>
@@ -39,12 +39,12 @@ export default function StandingsTable({ standings, compact = false }: Standings
             <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-12">Main</th>
             {!compact && (
               <>
-                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10 hidden sm:table-cell">M</th>
-                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10 hidden sm:table-cell">S</th>
-                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10 hidden sm:table-cell">K</th>
-                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10 hidden md:table-cell">GF</th>
-                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10 hidden md:table-cell">GA</th>
-                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-12 hidden sm:table-cell">GD</th>
+                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10">M</th>
+                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10">S</th>
+                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10">K</th>
+                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10">GF</th>
+                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-10">GA</th>
+                <th className="text-center py-3 px-2 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-12">GD</th>
               </>
             )}
             <th className="text-center py-3 px-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider w-14">Poin</th>
@@ -100,12 +100,12 @@ export default function StandingsTable({ standings, compact = false }: Standings
 
                 {!compact && (
                   <>
-                    <td className="text-center py-3 px-2 text-green-400 font-medium tabular-nums hidden sm:table-cell">{player.won}</td>
-                    <td className="text-center py-3 px-2 text-muted-foreground tabular-nums hidden sm:table-cell">{player.drawn}</td>
-                    <td className="text-center py-3 px-2 text-red-400 font-medium tabular-nums hidden sm:table-cell">{player.lost}</td>
-                    <td className="text-center py-3 px-2 text-muted-foreground tabular-nums hidden md:table-cell">{player.goalsFor}</td>
-                    <td className="text-center py-3 px-2 text-muted-foreground tabular-nums hidden md:table-cell">{player.goalsAgainst}</td>
-                    <td className="text-center py-3 px-2 tabular-nums hidden sm:table-cell">
+                    <td className="text-center py-3 px-2 text-green-400 font-medium tabular-nums">{player.won}</td>
+                    <td className="text-center py-3 px-2 text-muted-foreground tabular-nums">{player.drawn}</td>
+                    <td className="text-center py-3 px-2 text-red-400 font-medium tabular-nums">{player.lost}</td>
+                    <td className="text-center py-3 px-2 text-muted-foreground tabular-nums">{player.goalsFor}</td>
+                    <td className="text-center py-3 px-2 text-muted-foreground tabular-nums">{player.goalsAgainst}</td>
+                    <td className="text-center py-3 px-2 tabular-nums">
                       <span className={player.goalDiff > 0 ? 'text-green-400' : player.goalDiff < 0 ? 'text-red-400' : 'text-muted-foreground'}>
                         {player.goalDiff > 0 ? '+' : ''}{player.goalDiff}
                       </span>
