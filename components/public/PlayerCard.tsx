@@ -30,8 +30,8 @@ export default function PlayerCard({ player }: PlayerCardProps) {
   }
 
   return (
-    <Link href={`/pemain/${player.id}`} className="game-card p-5 block group">
-      <div className="flex items-center gap-4">
+    <Link href={`/pemain/${player.id}`} className="game-card p-4 sm:p-5 block group">
+      <div className="flex items-center gap-3 sm:gap-4">
         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-secondary to-muted flex items-center justify-center text-xl font-bold text-primary/60 group-hover:text-primary transition-colors shrink-0">
           {player.name.charAt(0)}
         </div>

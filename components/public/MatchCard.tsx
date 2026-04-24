@@ -19,7 +19,7 @@ export default function MatchCard({ match }: MatchCardProps) {
   const isLive = match.status === 'LIVE'
 
   return (
-    <div className="game-card p-4 group">
+    <div className="game-card p-3 md:p-4 group">
       {/* Status & Date */}
       <div className="flex items-center justify-between mb-3">
         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${getStatusBadgeColor(match.status)} ${isLive ? 'pulse-live' : ''}`}>
@@ -42,7 +42,7 @@ export default function MatchCard({ match }: MatchCardProps) {
       <div className="flex items-center justify-between gap-2">
         {/* Home */}
         <Link href={`/pemain/${match.homePlayer.id}`} className="flex-1 text-center min-w-0 group/p">
-          <div className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-xl bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center text-xs font-bold text-primary mb-1.5 group-hover/p:ring-1 group-hover/p:ring-primary/50 transition-all overflow-hidden">
+          <div className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-xl bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center text-xs font-bold text-primary mb-1 sm:mb-1.5 group-hover/p:ring-1 group-hover/p:ring-primary/50 transition-all overflow-hidden shrink-0">
             {match.homePlayer.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={match.homePlayer.avatarUrl} alt={match.homePlayer.name} className="w-full h-full object-cover" loading="lazy" />
@@ -55,12 +55,12 @@ export default function MatchCard({ match }: MatchCardProps) {
         </Link>
 
         {/* Score */}
-        <div className="text-center px-2 shrink-0">
+        <div className="text-center px-1 sm:px-2 shrink-0">
           {isFinished || isLive ? (
             <div className="flex items-center gap-1.5">
-              <span className="text-2xl md:text-3xl font-gaming font-bold text-foreground tabular-nums">{match.homeScore}</span>
-              <span className="text-base text-muted-foreground font-bold">:</span>
-              <span className="text-2xl md:text-3xl font-gaming font-bold text-foreground tabular-nums">{match.awayScore}</span>
+              <span className="text-xl sm:text-2xl md:text-3xl font-gaming font-bold text-foreground tabular-nums">{match.homeScore}</span>
+              <span className="text-sm sm:text-base text-muted-foreground font-bold">:</span>
+              <span className="text-xl sm:text-2xl md:text-3xl font-gaming font-bold text-foreground tabular-nums">{match.awayScore}</span>
             </div>
           ) : (
             <div className="text-base font-heading font-bold text-muted-foreground px-1">VS</div>
@@ -69,7 +69,7 @@ export default function MatchCard({ match }: MatchCardProps) {
 
         {/* Away */}
         <Link href={`/pemain/${match.awayPlayer.id}`} className="flex-1 text-center min-w-0 group/p">
-          <div className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-xl bg-gradient-to-br from-gaming-accent/20 to-secondary flex items-center justify-center text-xs font-bold text-gaming-accent mb-1.5 group-hover/p:ring-1 group-hover/p:ring-gaming-accent/50 transition-all overflow-hidden">
+          <div className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-xl bg-gradient-to-br from-gaming-accent/20 to-secondary flex items-center justify-center text-xs font-bold text-gaming-accent mb-1 sm:mb-1.5 group-hover/p:ring-1 group-hover/p:ring-gaming-accent/50 transition-all overflow-hidden shrink-0">
             {match.awayPlayer.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={match.awayPlayer.avatarUrl} alt={match.awayPlayer.name} className="w-full h-full object-cover" loading="lazy" />
