@@ -26,12 +26,12 @@ interface Match {
 }
 
 interface ScheduleClientProps {
-  scheduled: Match[]
+  matches: Match[]
   seasons: {id: string, name: string, isActive: boolean}[]
   currentSeasonId: string | null
 }
 
-export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: ScheduleClientProps) {
+export default function ScheduleClient({ matches, seasons, currentSeasonId }: ScheduleClientProps) {
   const [search, setSearch] = useState('')
   const [dateSearch, setDateSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -81,15 +81,26 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
     return isValid
   }
 
-  // Filtered lists
-  const filteredScheduled = useMemo(() => scheduled.filter(matchFilter), [scheduled, search, dateSearch])
+  // Filtered list (All matches that match search criteria)
+  const filteredMatches = useMemo(() => matches.filter(matchFilter), [matches, search, dateSearch])
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filteredScheduled.length / ITEMS_PER_PAGE))
+  // Split into Scheduled and Finished
+  const scheduledMatches = useMemo(() => filteredMatches.filter(m => m.status === 'SCHEDULED' || m.status === 'LIVE'), [filteredMatches])
+  const finishedMatches = useMemo(() => filteredMatches.filter(m => m.status === 'FINISHED'), [filteredMatches])
+
+  // Pagination for Scheduled Matches
+  const totalPagesScheduled = Math.max(1, Math.ceil(scheduledMatches.length / ITEMS_PER_PAGE))
   const paginatedScheduled = useMemo(() => {
     const start = (page - 1) * ITEMS_PER_PAGE
-    return filteredScheduled.slice(start, start + ITEMS_PER_PAGE)
-  }, [filteredScheduled, page])
+    return scheduledMatches.slice(start, start + ITEMS_PER_PAGE)
+  }, [scheduledMatches, page])
+
+  // Pagination for Finished Matches
+  const totalPagesFinished = Math.max(1, Math.ceil(finishedMatches.length / ITEMS_PER_PAGE))
+  const paginatedFinished = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE
+    return finishedMatches.slice(start, start + ITEMS_PER_PAGE)
+  }, [finishedMatches, page])
 
   // Group by date (formatDayDate returns standard string representing the day)
   const groupMatches = (matches: Match[]) => {
@@ -105,6 +116,7 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
   }
 
   const groupedScheduled = useMemo(() => groupMatches(paginatedScheduled), [paginatedScheduled])
+  const groupedFinished = useMemo(() => groupMatches(paginatedFinished), [paginatedFinished])
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
@@ -117,7 +129,7 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
           <div>
             <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">Jadwal Pertandingan</h1>
             <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              {scheduled.length} laga mendatang
+              {matches.length} total pertandingan
             </p>
           </div>
         </div>
@@ -150,7 +162,7 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
       </div>
 
       {/* No Results Fallback */}
-      {(search || dateSearch) && filteredScheduled.length === 0 && (
+      {(search || dateSearch) && filteredMatches.length === 0 && (
         <div className="text-center py-20 bg-secondary/20 rounded-2xl border border-border/50">
           <Search className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg text-foreground font-semibold">Tidak ada hasil ditemukan</p>
@@ -181,7 +193,7 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
             ))}
           </div>
 
-          {totalPages > 1 && (
+          {totalPagesScheduled > 1 && (
             <div className="flex justify-center items-center gap-2 mt-10">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -192,11 +204,11 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
                 Sebelumnya
               </button>
               <div className="text-sm text-muted-foreground font-medium px-2">
-                Halaman {page} dari {totalPages}
+                Halaman {page} dari {totalPagesScheduled}
               </div>
               <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
+                onClick={() => setPage(p => Math.min(totalPagesScheduled, p + 1))}
+                disabled={page === totalPagesScheduled}
                 className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed border border-border/50 transition-colors text-sm font-medium"
               >
                 Selanjutnya
@@ -207,7 +219,56 @@ export default function ScheduleClient({ scheduled, seasons, currentSeasonId }: 
         </section>
       )}
 
-      {!(search || dateSearch) && scheduled.length === 0 && (
+      {/* Finished Matches */}
+      {groupedFinished.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-3">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            <h2 className="font-heading text-xl font-bold text-foreground">Riwayat & Hasil Selesai</h2>
+          </div>
+
+          <div className="space-y-8">
+            {groupedFinished.map(([dateConfig, dayMatches]) => (
+              <div key={dateConfig}>
+                <div className="inline-block px-3 py-1 mb-4 rounded-lg bg-green-500/10 text-green-400 font-semibold text-sm border border-green-500/20">
+                  {dateConfig}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+                  {dayMatches.map(match => (
+                    <MatchCard key={match.id} match={match} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {totalPagesFinished > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-10">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed border border-border/50 transition-colors text-sm font-medium"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Sebelumnya
+              </button>
+              <div className="text-sm text-muted-foreground font-medium px-2">
+                Halaman {page} dari {totalPagesFinished}
+              </div>
+              <button
+                onClick={() => setPage(p => Math.min(totalPagesFinished, p + 1))}
+                disabled={page === totalPagesFinished}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed border border-border/50 transition-colors text-sm font-medium"
+              >
+                Selanjutnya
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {!(search || dateSearch) && matches.length === 0 && (
         <div className="text-center py-20">
           <Calendar className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg text-muted-foreground">Belum ada pertandingan dijadwalkan untuk musim ini.</p>

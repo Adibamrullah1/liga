@@ -24,11 +24,11 @@ async function getMatches(seasonIdParam?: string) {
   }
 
   if (!targetSeason) {
-    return { scheduled: [], seasons: [], activeSeasonId: null }
+    return { matches: [], seasons: [], activeSeasonId: null }
   }
 
-  const scheduled = await prisma.match.findMany({
-    where: { status: { in: ['SCHEDULED', 'LIVE'] }, seasonId: targetSeason.id },
+  const matches = await prisma.match.findMany({
+    where: { seasonId: targetSeason.id },
     select: {
       id: true, status: true, homeScore: true, awayScore: true, scheduledAt: true,
       homePlayer: { select: { id: true, name: true, shortName: true, avatarUrl: true } },
@@ -37,11 +37,11 @@ async function getMatches(seasonIdParam?: string) {
     orderBy: { scheduledAt: 'asc' },
   })
     
-  return { scheduled, seasons, activeSeasonId: targetSeason.id }
+  return { matches, seasons, activeSeasonId: targetSeason.id }
 }
 
 export default async function JadwalPage({ searchParams }: { searchParams: { season?: string } }) {
-  const { scheduled, seasons, activeSeasonId } = await getMatches(searchParams.season)
+  const { matches, seasons, activeSeasonId } = await getMatches(searchParams.season)
   
-  return <ScheduleClient scheduled={scheduled} seasons={seasons} currentSeasonId={activeSeasonId} />
+  return <ScheduleClient matches={matches} seasons={seasons} currentSeasonId={activeSeasonId} />
 }
